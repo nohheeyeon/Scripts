@@ -6,8 +6,19 @@ exit_with_error() {
     exit 1    # 에러 코드와 함께 스크립트 종료
 }
 
+# 이전 달과 연도 계산
+year=$(date +%Y)
+month=$(date +%m)
+
+if [ "$month" -eq 1 ]; then
+    month=12
+    year=$(($year - 1))
+else
+    month=$(($month - 1))
+fi
+
 # 디렉토리 경로 설정
-target_directory="패치셋 경로"
+target_directory="C:ftp_root/manual/ms/$year/$month"
 
 # 오늘 날짜를 YYYYMMDD 형식으로 얻기
 current_date=$(date +'%Y%m%d')
