@@ -30,3 +30,11 @@ if [ -n "$(find "$target_directory" -maxdepth 1 -type f -name '*.zip')" ]; then
 else
     echo "zip 파일이 존재하지 않습니다."
 fi
+
+# patches.zip이 있는 지 확인하는 if 문
+if [ -e "$new_folder/patches.zip" ]; then
+    unzip -o "$new_folder/patches.zip" -d "$new_folder"
+    echo "patches.zipdmf '$new_folder' 폴더로 압축 해제했습니다."
+else
+    echo "patches.zip이 없습니다."
+fi
