@@ -17,8 +17,8 @@ if [ -n "$(find "$target_directory" -maxdepth 1 -type f -name '*.zip')" ]; then
     echo "zip 파일이 존재합니다."
 
     # 압축을 푸는 작업
-    for zip_file in "$target_directory"/*.zip; do
-        unip -o "$zip_file" -d "$new_folder"
+    for zip_file in *.zip; do
+        unip -d "${zip_file%.zip}" "$zip_file"
         echo "$zip_file의 압축을 풀었습니다."
 
         # 기존의 zip 파일 삭제
