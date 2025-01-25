@@ -13,3 +13,8 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 echo "원격 서버의 파일/폴더 목록 추출 완료"
+
+# 추출된 파일/폴더 목록 출력
+echo "원격 서버의 파일/폴더 목록 :"
+cat remote_files.txt
+bash
