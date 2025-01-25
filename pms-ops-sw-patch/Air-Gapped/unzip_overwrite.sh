@@ -27,9 +27,15 @@ if [ -n "$(find "$target_directory" -maxdepth 1 -type f -name '*.zip')" ]; then
 
     # 압축을 푸는 작업
     for zip_file in *.zip; do
-        unip -d "${zip_file%.zip}" "$zip_file"
-        echo "$zip_file의 압축을 풀었습니다."
-
+        unzip_dir="${zip_file%.zip}"
+        mkdir -p "$unzip_dir" || {
+            echo "폴더 생성 실패: $unzip_dir"
+            exit 1
+        }
+        unzip -d "$unzip_dir" "$zip_file" || {
+            echo "압축 해제 실패: $zip_file"
+            exit 1
+        }
         # patches.zip 파일 압축 해제 작업
         patches_zip_file="$zip_file%.zip}/patches.zip"
         if [ -f "$patches_zip_file" ]; then
