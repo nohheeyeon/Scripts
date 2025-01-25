@@ -37,10 +37,12 @@ if [ -n "$(find "$target_directory" -maxdepth 1 -type f -name '*.zip')" ]; then
             exit 1
         }
         # patches.zip 파일 압축 해제 작업
-        patches_zip_file="$zip_file%.zip}/patches.zip"
+        patches_zip_file="${unzip_dir}/patches.zip"
         if [ -f "$patches_zip_file" ]; then
-            mkdir -p "${zip_file%.zip}/patches"
-            unzip -d "${zip_file%.zip}/patches" "$patches_zip_file"
+            unzip -d "${zip_file%.zip}/patches" "$patches_zip_file" || {
+                echo "패치 압축 해제 실해"
+                exit 1
+            }
             echo "$patches_zip_file의 패치 파일 압축을 풀었습니다."
         fi
     done
