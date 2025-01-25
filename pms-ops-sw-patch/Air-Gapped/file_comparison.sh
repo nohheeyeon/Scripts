@@ -1,17 +1,11 @@
 #!/bin/bash
 
-# SFTP 서버 정보
-SFTP_SERVER="SFTP_SERVER"
+# SSH 서버 정보
+SSH_SERVER="SFTP_SERVER"
 PORT="PORT"
 USERNAME="USERNAME"
+DIRECTORY="DIRECTORY"
 
-# SFTP 접속
-if sftp -oPort=$PORT $USERNAME@$SFTP_SERVER &>/dev/null <<EOF; then
-pwd
-bye
-EOF
-    echo "SFTP 서버에 접속 설공"
-else
-    echo "SFTP 서버에 접속 실패"
-fi
+# SSH를 통해 원격 명령 실행
+ssh -p $PORT $USERNAME@$SSH_SERVER "find $DIRECTORY -type f -or -type d"
 bash
