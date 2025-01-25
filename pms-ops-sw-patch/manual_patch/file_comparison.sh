@@ -44,9 +44,6 @@ PORT="PORT"
 USERNAME="USERNAME"
 REMOTE_DIRECTORY="DIRECTORY"
 
-# 로컬 디렉토리 경로
-LOCAL_DIRECTORY="로컬 디렉토리 경로"
-
 # 원격 서버의 패치셋에 있는 파일 이름 추출
 ssh -p $PORT $USERNAME@SSH_SERVER "find $REMOTE_DIRECTORY -type f -or -type d" >remote_files.txt
 if [ $? -ne 0 ]; then
