@@ -11,3 +11,22 @@ new_folder="$target_directory/$current_date"
 
 # 디렉토리로 이동
 cd "$target_directory" || exit
+
+# zip 파일이 있는 지 확인하는 If 문
+if [ -n "$(find "$target_directory" -maxdepth 1 -type f -name '*.zip')" ]; then
+    echo "zip 파일이 존재합니다."
+
+    # 압축을 푸는 작업
+    for zip_file in "$target_directory"/*.zip; do
+        unip -o "$zip_file" -d "$new_folder"
+        echo "$zip_file의 압축을 풀었습니다."
+
+        # 기존의 zip 파일 삭제
+        rm -r "$zip_file"
+    done
+
+    mv "$target_directory"/*.zip "$new_folder"
+    echo "zip 파일을 '$new_folder' 폴더로 이동했습니다."
+else
+    echo "zip 파일이 존재하지 않습니다."
+fi
