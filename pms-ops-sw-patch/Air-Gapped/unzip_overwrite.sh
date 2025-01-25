@@ -45,17 +45,19 @@ if [ -n "$(find "$target_directory" -maxdepth 1 -type f -name '*.zip')" ]; then
             }
             echo "$patches_zip_file의 패치 파일 압축을 풀었습니다."
         fi
-    done
 
-    mkdir "$new_folder"
-    for folder in "$target_directory"/*/; do
-        if [ -d "$folder" ]; then
-            find "$folder" -mindepth 1 -maxdepth 1 -exec cp -rf {} "$new_folder/" \;
-            rm -r "$folder"
-            echo "$folder 내의 모든 파일과 폴더를 $new_folder/로 복사하고 원본 폴더를 삭제했습니다."
-        fi
-    done
+        # unzip된 파일들을 new_folder로 복사
+        cp -rf "$unzip_dir"/* "$new_folder/" || {
+            echo "파일 복사 실패"
+            exit 1
+        }
+        echo "$unzip_dir의 파일들을 $new_folder로 복사했습니다."
 
+        # unzip된 폴더 삭제
+        rm -rf "$unzip_dir"
+        echo "$unzip_dir를 삭제했습니다."
+
+    done
 fi
 
 # 스크립트 실행 후 자동 종료 방지
