@@ -60,11 +60,16 @@ if [ $? -ne 0 ]; then
 fi
 echo "로컬 디렉토리의 파일/폴더 목록 추출 완료"
 
-# 추출된 파일/폴더 목록 출력
-echo "원격 서버의 파일/폴더 목록 :"
-cat remote_files.txt
+# 필요한 부분만 출력하여 새로운 파일에 저장
+awk -v prefix="$REMOTE_DIRECTORY/" '{sub(prefix, ""); print}' remote_files.txt >remote_files_substr.txt
+if [$? -ne 0 ]; then
+    echo "원격 파일 목록에서 필요한 부분 추출에 실패"
+    exit 1
+fi
 
-echo "로컬 디렉토리의 파일/폴더 목록 :"
-cat local_files.txt
-
+awk -v prefix="$(echo $LOCAL_DIRECTORY | sed 's|]]|/|g')/" '{sub(prefix, ""); print}' local_files.txt >local_files_substr.txt
+if [ $? -ne 0 ]; then
+    echo "로컬  파일 목록에서 필요한 부분 추출에 실패"
+    exit 1
+fi
 bash
