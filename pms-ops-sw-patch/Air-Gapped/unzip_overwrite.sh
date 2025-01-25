@@ -60,6 +60,6 @@ if [ -n "$(find "$target_directory" -maxdepth 1 -type f -name '*.zip')" ]; then
     done
 fi
 
-# 스크립트 실행 후 자동 종료 방지
+# 스크립트 실행 완료
 echo "스크립트 실행 완료"
-read -r _ # 입력 대기를 위한 변수
+bash
