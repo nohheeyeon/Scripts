@@ -10,7 +10,16 @@ current_date=$(date +'%Y%m%d')
 new_folder="$target_directory/$current_date"
 
 # 디렉토리로 이동
-cd "$target_directory" || exit
+cd "$target_directory" || {
+    echo "디렉토리로 이동 실패"
+    exit 1
+}
+
+# 압축 해제 작업 전에 대상 폴더 생성
+mkdir -p "$new_folder" || {
+    echo "폴더 생성 실패: $new_folder"
+    exit 1
+}
 
 # zip 파일이 있는 지 확인하는 If 문
 if [ -n "$(find "$target_directory" -maxdepth 1 -type f -name '*.zip')" ]; then
