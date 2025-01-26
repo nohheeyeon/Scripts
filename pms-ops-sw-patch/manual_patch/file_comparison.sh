@@ -78,9 +78,11 @@ done <local_files_substr.txt
 
 echo "동일한 이름의 .ayt 파일이 존재하지 않는 파일:"
 while IFS= read -r file; do
-    ayt_file="${file}.ayt"
-    if [[ ! -f "$LOCAL_DIRECTORY/$ayt_file" ]]; then
-        echo "$file"
+    if [[ "${file##*.}" == "cab" || "${file##*}" == "exe" ]]; then
+        ayt_file="${file}.ayt"
+        if [[ ! -f "$LOCAL_DIRECTORY/$ayt_file" ]]; then
+            echo "$file"
+        fi
     fi
 done <local_files_substr.txt
 
