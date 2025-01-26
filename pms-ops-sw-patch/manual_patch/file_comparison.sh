@@ -78,4 +78,12 @@ declare -A remote_files_dict
 while IFS= read -r line; do
     remote_files_dict["$line"]=1
 done <remote_files_substr.txt
+
+# 비교 결과 출력
+echo "로컬 디렉토리에만 있는 파일:"
+while IFS= read -r file; do
+    if [[ -z "${remote_files_dict[$file]}" ]]; then
+        echo "$file"
+    fi
+done <local_files_substr.txt
 bash
