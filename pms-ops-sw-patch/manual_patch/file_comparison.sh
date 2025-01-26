@@ -68,10 +68,18 @@ while IFS= read -r line; do
     remote_files_dict["$line"]=1
 done <remote_files_substr.txt
 
-# 비교 결과 출력
-echo "로컬 디렉토리에만 있는 파일:"
+# 비교 결과 출력 및 .ayt 파일 존재 여부 확인
+echo "로컬 디렉토리에만 있는 파일 :"
 while IFS= read -r file; do
     if [[ -z "${remote_files_dict[$file]}" ]]; then
+        echo "$file"
+    fi
+done <local_files_substr.txt
+
+echo "동일한 이름의 .ayt 파일이 존재하지 않는 파일:"
+while IFS= read -r file; do
+    ayt_file="${file}.ayt"
+    if [[ ! -f "$LOCAL_DIRECTORY/$ayt_file" ]]; then
         echo "$file"
     fi
 done <local_files_substr.txt
