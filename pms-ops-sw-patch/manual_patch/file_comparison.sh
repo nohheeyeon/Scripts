@@ -72,4 +72,10 @@ if [ $? -ne 0 ]; then
     echo "로컬  파일 목록에서 필요한 부분 추출에 실패"
     exit 1
 fi
+
+# 파일 경로를 딕셔너리로 저장
+declare -A remote_files_dict
+while IFS= read -r line; do
+    remote_files_dict["$line"]=1
+done <remote_files_substr.txt
 bash
