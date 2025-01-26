@@ -86,4 +86,7 @@ while IFS= read -r file; do
         echo "$file"
     fi
 done <local_files_substr.txt
+
+# 임시 파일 삭제
+rm remote_files_txt local_files.txt
 bash
