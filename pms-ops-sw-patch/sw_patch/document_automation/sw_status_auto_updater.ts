@@ -27,7 +27,7 @@ function main(workbook: ExcelScript.Workbook) {
     console.log(`최신 검증서 "제품명" 셀이 위치한 행과 열: ${validation_product_cell_address.row}, ${validation_product_cell_address.column}`);
 
         // "제품" 및 "제품명" 셀 하위의 모든 열 데이터를 추출
-        let sw_product_names = get_column_data(sw_summary_sheet, sw_product_cell_address.row + 1, sw_product_cell_address.column);
+        let sw_product_names = get_column_data(sw_summary_sheet, sw_product_cell_address.row + 1, sw_product_cell_address.column+1);
         let validation_product_names = get_column_data(latest_validation_sheet, validation_product_cell_address.row + 1, validation_product_cell_address.column);
 
         // 데이터 출력
@@ -37,7 +37,7 @@ function main(workbook: ExcelScript.Workbook) {
             console.log("SW현황 시트 또는 최신 검증서 시트에서 '제품' 셀을 찾을 수 없습니다.")
         }
     }
-    
+
     function find_sheet_by_regex(sheets: ExcelScript.Worksheet[], regex: RegExp): ExcelScript.Worksheet | null {
         for (let sheet of sheets) {
             if (regex.test(sheet.getName())) {
