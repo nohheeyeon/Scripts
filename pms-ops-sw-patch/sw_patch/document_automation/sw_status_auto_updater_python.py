@@ -20,11 +20,23 @@ for cell in ws4["E"]:
 
         # 네번째 시트의 D열 값을 첫번째 시트의 F열로 복사
         ws1.cell(row=row_in_ws1, column=6, value=ws4.cell(row_in_ws4, column=4).value)
+        ws1.cell(
+            row=row_in_ws1, column=7, value=ws4.cell(row=row_in_ws4, column=8).value
+        )
+        ws1.cell(
+            row=row_in_ws4, column=8, value=ws4.cell(row=row_in_ws4, column=9).value
+        )
         print(
             f"동일한 값 발견: {cell.value} 첫 번째 시트의 {row_in_ws4}행, 네번째 시트이 {row_in_ws4}헹"
         )
         print(
             f"네번째 시트의 D열 값 '{ws4.cell(row=row_in_ws4, column=4).value}'을 첫번째 시트의 F열로 복사"
+        )
+        print(
+            f"네번째 시트의 H열 값 '{ws4.cell(row=row_in_ws4, column=8).value}'을 첫번째 시트의 G열로 복사"
+        )
+        print(
+            f"네번째 시트의 I열 값 '{ws4.cell(row=row_in_ws4, column=9).value}'을 첫번째 시트의 H열로 복사"
         )
 
 # 엑셀 파일 저장 및 닫기
