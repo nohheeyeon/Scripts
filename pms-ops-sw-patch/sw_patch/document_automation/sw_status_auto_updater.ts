@@ -3,39 +3,39 @@ function main(workbook: ExcelScript.Workbook) {
     let sheets = workbook.getWorksheets();
     
     // SW현황과 최신 검증서 가져오기
-    let ws1 = sheets[0]; // SW현황
-    let ws4 = sheets[3]; // 최신 검증서
+    let sw_summary_sheet = sheets[0]; // SW현황
+    let lastest_validation_sheet = sheets[3]; // 최신 검증서
 
     // SW현황의 D열(제품명) 데이터를 딕셔너리로 저장
-    let d_column_values: { [key: string]: number } = {};
-    let last_row_ws1 = ws1.getUsedRange().getRowCount();
-    let d_column_range = ws1.getRange(`D2:D${last_row_ws1}`);
-    d_column_range.getValues().forEach((row, index) => {
-        let cell_values = row[0];
-        if (cell_values !== null && cell_values !== undefined && cell_values !== "") {
-            d_column_values[String(cell_values) ] = index + 2;
+    let patch_name_column_values: { [key: string]: number } = {};
+    let lastest_validation_sheet_row_sw_summary_sheet = sw_summary_sheet.getUsedRange().getRowCount();
+    let patch_name_column_range = sw_summary_sheet.getRange(`D2:D${lastest_validation_sheet_row_sw_summary_sheet}`);
+    patch_name_column_range.getValues().forEach((row, index) => {
+        let patch_name_values = row[0];
+        if (patch_name_values !== null && patch_name_values !== undefined && patch_name_values !== "") {
+            patch_name_column_values[String(patch_name_values) ] = index + 2;
         }
     });
 
     // 최신 검증서의 E열(제품명) 데이터와 비교하여 동일한 값이 있는 행의 데이터를 SW현황으로 복사
-    let last_row_ws4 = ws4.getUsedRange(). getRowCount();
-    let e_column_range = ws4.getRange(`E2:E${last_row_ws4}`);
+    let lastest_validation_sheet_row_lastest_validation_sheet = lastest_validation_sheet.getUsedRange(). getRowCount();
+    let e_column_range = lastest_validation_sheet.getRange(`E2:E${lastest_validation_sheet_row_lastest_validation_sheet}`);
     e_column_range.getValues().forEach((row, index) => {
-        let cell_values = row[0];
-        if (cell_values !== null && cell_values !== undefined && cell_values !== "" && d_column_values[String(cell_values)] !== undefined) {
-            let row_in_ws1: number = d_column_values[String(cell_values)];
-            let row_in_ws4: number = index + 2;
+        let patch_name_values = row[0];
+        if (patch_name_values !== null && patch_name_values !== undefined && patch_name_values !== "" && patch_name_values[String(patch_name_values)] !== undefined) {
+            let row_in_sw_summary_sheet: number = patch_name_column_values[String(patch_name_values)];
+            let row_in_lastest_validation_sheet: number = index + 2;
 
             // 해당하는 셀 복사 작업
-            ws1.getCell(row_in_ws1 - 1, 5).setValue(ws4.getCell(row_in_ws4 - 1, 3).getValue()); // D열(발표일) 값 복사
-            ws1.getCell(row_in_ws1 - 1, 6).setValue(ws4.getCell(row_in_ws4 - 1, 7).getValue()); // H열(버전) 값 복사
-            ws1.getCell(row_in_ws1 - 1, 7).setValue(ws4.getCell(row_in_ws4 - 1, 8).getValue()); // I열(패치 파일명) 값 복사
+            sw_summary_sheet.getCell(row_in_sw_summary_sheet - 1, 5).setValue(lastest_validation_sheet.getCell(row_in_ws4 - 1, 3).getValue()); // D열(발표일) 값 복사
+            sw_summary_sheet.getCell(row_in_sw_summary_sheet - 1, 6).setValue(lastest_validation_sheet.getCell(row_in_ws4 - 1, 7).getValue()); // H열(버전) 값 복사
+            sw_summary_sheet.getCell(row_in_sw_summary_sheet - 1, 7).setValue(lastest_validation_sheet.getCell(row_in_ws4 - 1, 8).getValue()); // I열(패치 파일명) 값 복사
 
             // 로그 출력
-            console.log(`동일한 값 발견: ${cell_values} (SW현황의 ${row_in_ws1}행, 최신 검증서의 ${row_in_ws4}행)`)
-            console.log(`최신 검증서의 D열 값 '${ws4.getCell(row_in_ws4 - 1, 3).getValue()}'을 SW현황의 F열로 복사`);
-            console.log(`최신 검증서의 H열 값 '${ws4.getCell(row_in_ws4 - 1, 7).getValue()}'을 SW현황의 G열로 복사`);
-            console.log(`최신 검증서의 I열 값 '${ws4.getCell(row_in_ws4 - 1, 8).getValue()}'을 SW현황의 H열로 복사`);
+            console.log(`동일한 값 발견: ${patch_name_values} (SW현황의 ${row_in_sw_summary_sheet}행, 최신 검증서의 ${row_in_lastest_validation_sheet}행)`)
+            console.log(`최신 검증서의 D열 값 '${lastest_validation_sheet.getCell(row_in_lastest_validation_sheet - 1, 3).getValue()}'을 SW현황의 F열로 복사`);
+            console.log(`최신 검증서의 H열 값 '${lastest_validation_sheet.getCell(row_in_lastest_validation_sheet - 1, 7).getValue()}'을 SW현황의 G열로 복사`);
+            console.log(`최신 검증서의 I열 값 '${lastest_validation_sheet.getCell(row_in_lastest_validation_sheet - 1, 8).getValue()}'을 SW현황의 H열로 복사`);
         }
     })
 }
