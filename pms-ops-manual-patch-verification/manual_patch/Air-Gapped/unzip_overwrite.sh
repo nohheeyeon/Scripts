@@ -14,7 +14,7 @@ if [ "$month" -eq 1 ]; then
     month=12
     year=$(($year - 1))
 else
-    month=$(($month - 1))
+    month=$((10#$month - 1))
 fi
 
 # 디렉토리 경로 설정
