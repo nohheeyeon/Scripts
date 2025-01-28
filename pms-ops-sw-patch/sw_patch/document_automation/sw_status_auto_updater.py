@@ -37,7 +37,7 @@ for cell in ws4["E"]:
         row_in_ws4 = cell.row
 
         # 해당하는 셀 복사 작업
-        copy_cell_value(ws4, row_in_ws4, 4, ws1, row_in_ws1, 6)  # D열(제품명) 값 복사
+        copy_cell_value(ws4, row_in_ws4, 4, ws1, row_in_ws1, 6)  # D열(발표일) 값 복사
         log_copy_operation(cell.value, row_in_ws1, row_in_ws4, ws4, row_in_ws4, 4, 6)
         copy_cell_value(ws4, row_in_ws4, 8, ws1, row_in_ws1, 7)  # H열(버전) 값 복사
         log_copy_operation(cell.value, row_in_ws1, row_in_ws4, ws4, row_in_ws4, 8, 7)

@@ -27,7 +27,7 @@ function main(workbook: ExcelScript.Workbook) {
             let row_in_ws4: number = index + 2;
 
             // 해당하는 셀 복사 작업
-            ws1.getCell(row_in_ws1 - 1, 5).setValue(ws4.getCell(row_in_ws4 - 1, 3).getValue()); // D열(제품명) 값 복사
+            ws1.getCell(row_in_ws1 - 1, 5).setValue(ws4.getCell(row_in_ws4 - 1, 3).getValue()); // D열(발표일) 값 복사
             ws1.getCell(row_in_ws1 - 1, 6).setValue(ws4.getCell(row_in_ws4 - 1, 7).getValue()); // H열(버전) 값 복사
             ws1.getCell(row_in_ws1 - 1, 7).setValue(ws4.getCell(row_in_ws4 - 1, 8).getValue()); // I열(패치 파일명) 값 복사
 
