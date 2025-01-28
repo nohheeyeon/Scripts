@@ -1,104 +1,79 @@
 function main(workbook: ExcelScript.Workbook) {
-    // "PMS SW 패치 현황 및 검증서" 불러오기
+    // "SW 패치 현황 및 검증서" 불러오기
     let sheets = workbook.getWorksheets();
   
     // SW현황 시트를 가져오기
     let sw_summary_sheet = find_sheet_by_regex(sheets, /^SW현황$/);
-
+  
     if (!sw_summary_sheet) {
-        console.log("SW현황 시트를 찾을 수 없습니다.")
-        return;
+      console.log("SW현황 시트를 찾을 수 없습니다.");
+      return;
     }
-
+  
     // 최신 검증서 시트를 가져오기
-    let latest_validation_sheet = find_sheet_by_regex(sheets, /^\d{4}-\{2}-\d{2} 검증서$/);
-
+    let latest_validation_sheet = find_sheet_by_regex(sheets, /^\d{4}-\d{2}-\d{2} 검증서$/);
+  
     if (!latest_validation_sheet) {
-        console.log("최신 검증서 시트를 찾을 수 없습니다.")
-        return;
+    console.log("최신검증서 시트를 찾을 수 없습니다.")
+      return;
     }
-
-    // 제품/제품명이라는 값을 가진 셀을 정규표현식을 사용하여 찾기
+  
+    // "제품"/"제품명"이라는 값을 가진 셀을 정규표현식을 사용하여 찾기
     let sw_product_cell_address = find_cell_with_regex(sw_summary_sheet, /제품/);
     let validation_product_cell_address = find_cell_with_regex(latest_validation_sheet, /제품명/);
-
+  
     if (sw_product_cell_address && validation_product_cell_address) {
-        console.log(`SW현황 "제품" 셀이 위치한 행과 열: ${sw_product_cell_address}, ${sw_product_cell_address.column}`);
-    console.log(`최신 검증서 "제품명" 셀이 위치한 행과 열: ${validation_product_cell_address.row}, ${validation_product_cell_address.column}`);
-
-        // "제품" 및 "제품명" 셀 하위의 모든 열 데이터를 추출
-        let sw_product_names = get_column_data(sw_summary_sheet, sw_product_cell_address.row + 1, sw_product_cell_address.column+1);
-        let validation_product_names = get_column_data(latest_validation_sheet, validation_product_cell_address.row + 1, validation_product_cell_address.column);
-
-        // 데이터 출력
-        console.log("SW현황 시트 제품명 데이터:", sw_product_names);
-        console.log("최신 검증서 시트 제품명 데이터:", validation_product_names);
-        } else {
-            console.log("SW현황 시트 또는 최신 검증서 시트에서 '제품' 셀을 찾을 수 없습니다.")
-        }
+      console.log(`SW현황 "제품" 셀이 위치한 행과 열: ${sw_product_cell_address.row}, ${sw_product_cell_address.column}`);
+      console.log(`최신 검증서 "제품명" 셀이 위치한 행과 열: ${validation_product_cell_address.row}, ${validation_product_cell_address.column}`);
+  
+      // "제품" 및 "제품명" 셀 하위의 모든 열 데이터를 추출
+      let sw_product_names = get_column_data(sw_summary_sheet, sw_product_cell_address.row + 1, sw_product_cell_address.column+1);
+      let validation_product_names = get_column_data(latest_validation_sheet, validation_product_cell_address.row + 1, validation_product_cell_address.column);
+  
+      // 데이터 출력
+      console.log("SW현황 시트 제품명 데이터:", sw_product_names);
+      console.log("최신 검증서 시트 제품명 데이터:", validation_product_names);
+    } else {
+      console.log("SW현황 시트 또는 최신 검증서 시트에서 '제품' 셀을 찾을 수 없습니다.");
     }
-
-    function find_sheet_by_regex(sheets: ExcelScript.Worksheet[], regex: RegExp): ExcelScript.Worksheet | null {
-        for (let sheet of sheets) {
-            if (regex.test(sheet.getName())) {
-                return sheet;
-            }
-        }
-        return null;
+  }
+  
+  function find_sheet_by_regex(sheets: ExcelScript.Worksheet[], regex: RegExp): ExcelScript.Worksheet | null {
+    for (let sheet of sheets) {
+      if (regex.test(sheet.getName())) {
+        return sheet;
+      }
     }
-
-    function find_cell_with_regex(sheet: ExcelScript.Worksheet, regex: RegExp): { row: number, column: number } | null {
-        let used_range = sheet.getUsedRange();
-        let values = used_range.getValues();
-
-        for (let row = 0; row < values.length; row++) {
-            for (let col = 0; col < values[row].length; col++) {
-                if (regex.test(String(values[row][col]))){
-                    return { row: row + 1, column: col + 1 };
-                }
-            }
+    return null;
+  }
+  
+  function find_cell_with_regex(sheet: ExcelScript.Worksheet, regex: RegExp): { row: number, column: number } | null {
+    let used_range = sheet.getUsedRange();
+    let values = used_range.getValues();
+  
+    for (let row = 0; row < values.length; row++) {
+      for (let col = 0; col < values[row].length; col++) {
+        if (regex.test(String(values[row][col]))) {
+          return { row: row + 1, column: col + 1 };
         }
-        return null;
+      }
     }
-
-function get_column_data(sheet: ExcelScript.Worksheet, start_row: number, column: number): string[] {
+  
+    return null;
+  }
+  
+  function get_column_data(sheet: ExcelScript.Worksheet, start_row: number, column: number): string[] {
     let column_data: string[] = [];
     let total_row_count = sheet.getUsedRange().getRowCount();
     let column_range = sheet.getRangeByIndexes(start_row - 1, column - 1, total_row_count - start_row + 1, 1);
-
-    patch_name_column_range.getValues().forEach((row, index) => {
-      let patch_name_values = row[0];
-      if (patch_name_values !== null && patch_name_values !== undefined && patch_name_values !== "") {
-        patch_name_column_values[String(patch_name_values)] = index + 2;
+  
+    column_range.getValues().forEach(row => {
+      let cell_value = row[0];
+      if (cell_value !== null && cell_value !== undefined && cell_value !== "") {
+        column_data.push(String(cell_value).trim());
       }
     });
-    
-    return patch_name_column_values;
-  }
   
-  // 최신 검증서의 F열(제품명) 데이터와 비교하여 동일한 값이 있는 행의 데이터를 SW현황으로 복사
-  function update_sw_summary_sheet(
-    sw_summary_sheet: ExcelScript.Worksheet,
-    latest_validation_sheet: ExcelScript.Worksheet,
-    sw_patch_names: { [key: string]: number },
-    validation_patch_names: { [key: string]: number }
-  ) {
-    Object.keys(validation_patch_names).forEach(patch_name_values => {
-      if (sw_patch_names[patch_name_values] !== undefined) {
-        let row_in_sw_summary_sheet: number = sw_patch_names[patch_name_values];
-        let row_in_latest_validation_sheet: number = validation_patch_names[patch_name_values];
-  
-        // 해당하는 셀 복사 작업
-        sw_summary_sheet.getCell(row_in_sw_summary_sheet - 1, 5).setValue(latest_validation_sheet.getCell(row_in_latest_validation_sheet - 1, 3).getValue()); // D열(발표일) 값 복사
-        sw_summary_sheet.getCell(row_in_sw_summary_sheet - 1, 6).setValue(latest_validation_sheet.getCell(row_in_latest_validation_sheet - 1, 8).getValue()); // I열(버전) 값 복사
-        sw_summary_sheet.getCell(row_in_sw_summary_sheet - 1, 7).setValue(latest_validation_sheet.getCell(row_in_latest_validation_sheet - 1, 9).getValue()); // J열(패치 파일명) 값 복사
-  
-        // 로그 출력
-        console.log(`동일한 값 발견: ${patch_name_values} (SW현황의 ${row_in_sw_summary_sheet}행, 최신 검증서의 ${row_in_latest_validation_sheet}행)`);
-        console.log(`최신 검증서의 D열 값 '${latest_validation_sheet.getCell(row_in_latest_validation_sheet - 1, 3).getValue()}'을 SW현황의 F열로 복사`);
-        console.log(`최신 검증서의 I열 값 '${latest_validation_sheet.getCell(row_in_latest_validation_sheet - 1, 8).getValue()}'을 SW현황의 G열로 복사`);
-        console.log(`최신 검증서의 J열 값 '${latest_validation_sheet.getCell(row_in_latest_validation_sheet - 1, 9).getValue()}'을 SW현황의 H열로 복사`);
-      }
-    });
+    return column_data;
   }
   
