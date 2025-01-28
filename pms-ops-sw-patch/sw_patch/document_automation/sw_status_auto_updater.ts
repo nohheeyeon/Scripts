@@ -20,6 +20,26 @@ function main(workbook: ExcelScript.Workbook) {
     // 제품명을 비교하여 데이터를 업데이트
     update_sw_summary_sheet(sw_summary_sheet, latest_validation_sheet, sw_patch_names, validation_patch_names);
   }
+
+// 최신 검증서 시트를 정규표현식으로 찾아 반환
+function find_latest_validation_sheet(sheets: ExcelScript.Worksheet[]): ExcelScript.Worksheet | null {
+    const regex = /^ \d{4}-\d{2}-\d{2} 검증서$/;
+    let latest_sheet: ExcelScript.Worksheet | null = null;
+    let latest_date: Date | null = null;
+
+    sheets.forEach(sheet => {
+        let sheet_name = sheet.getName();
+        if (regex.test(sheet_name)) {
+            let sheet_date = new Date(sheet_name.substring(0, 10));
+            if (!latest_date || sheet_date > latest_date) {
+                latest_date = sheet_date;
+                latest_sheet = sheet;
+            }
+        }
+    });
+
+    return latest_sheet
+}
   
   // SW현황의 D열(제품명) 데이터를 딕셔너리로 저장
   function get_patch_names(sheet: ExcelScript.Worksheet, column: string): { [key: string]: number } {
