@@ -77,8 +77,8 @@ function find_latest_validation_sheet(sheets: ExcelScript.Worksheet[]): ExcelScr
         // 로그 출력
         console.log(`동일한 값 발견: ${patch_name_values} (SW현황의 ${row_in_sw_summary_sheet}행, 최신 검증서의 ${row_in_latest_validation_sheet}행)`);
         console.log(`최신 검증서의 D열 값 '${latest_validation_sheet.getCell(row_in_latest_validation_sheet - 1, 3).getValue()}'을 SW현황의 F열로 복사`);
-        console.log(`최신 검증서의 H열 값 '${latest_validation_sheet.getCell(row_in_latest_validation_sheet - 1, 8).getValue()}'을 SW현황의 G열로 복사`);
-        console.log(`최신 검증서의 I열 값 '${latest_validation_sheet.getCell(row_in_latest_validation_sheet - 1, 9).getValue()}'을 SW현황의 H열로 복사`);
+        console.log(`최신 검증서의 I열 값 '${latest_validation_sheet.getCell(row_in_latest_validation_sheet - 1, 8).getValue()}'을 SW현황의 G열로 복사`);
+        console.log(`최신 검증서의 J열 값 '${latest_validation_sheet.getCell(row_in_latest_validation_sheet - 1, 9).getValue()}'을 SW현황의 H열로 복사`);
       }
     });
   }
