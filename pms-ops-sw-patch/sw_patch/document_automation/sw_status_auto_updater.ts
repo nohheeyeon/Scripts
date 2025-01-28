@@ -33,6 +33,10 @@ function main(workbook: ExcelScript.Workbook) {
       // 데이터 출력
       console.log("SW현황 시트 제품명 데이터:", sw_product_names);
       console.log("최신 검증서 시트 제품명 데이터:", validation_product_names);
+
+      // "제품" 및 "제품명" 셀 하위에 같은 값이 있는 지 확인하고 출력
+      let common_values = find_common_values(sw_product_names, validation_product_names);
+      console.log("공통된 제품명:", common_values);
     } else {
       console.log("SW현황 시트 또는 최신 검증서 시트에서 '제품' 셀을 찾을 수 없습니다.");
     }
@@ -76,4 +80,17 @@ function main(workbook: ExcelScript.Workbook) {
   
     return column_data;
   }
+
+// "제품" 및 "제품명"에서 같은 값을 찾는 함수
+function find_common_values(array1: string[], array2: string[]: string[] ) {
+    let common_values: string[] = [];
+
+    array1.forEach(value => {
+        if (array2.includes(value)) {
+            common_values.push(value);
+        }
+    });
+
+    return common_values;
+}
   
