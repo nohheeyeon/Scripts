@@ -71,8 +71,8 @@ function find_latest_validation_sheet(sheets: ExcelScript.Worksheet[]): ExcelScr
   
         // 해당하는 셀 복사 작업
         sw_summary_sheet.getCell(row_in_sw_summary_sheet - 1, 5).setValue(latest_validation_sheet.getCell(row_in_latest_validation_sheet - 1, 3).getValue()); // D열(발표일) 값 복사
-        sw_summary_sheet.getCell(row_in_sw_summary_sheet - 1, 6).setValue(latest_validation_sheet.getCell(row_in_latest_validation_sheet - 1, 8).getValue()); // H열(버전) 값 복사
-        sw_summary_sheet.getCell(row_in_sw_summary_sheet - 1, 7).setValue(latest_validation_sheet.getCell(row_in_latest_validation_sheet - 1, 9).getValue()); // I열(패치 파일명) 값 복사
+        sw_summary_sheet.getCell(row_in_sw_summary_sheet - 1, 6).setValue(latest_validation_sheet.getCell(row_in_latest_validation_sheet - 1, 8).getValue()); // I열(버전) 값 복사
+        sw_summary_sheet.getCell(row_in_sw_summary_sheet - 1, 7).setValue(latest_validation_sheet.getCell(row_in_latest_validation_sheet - 1, 9).getValue()); // J열(패치 파일명) 값 복사
   
         // 로그 출력
         console.log(`동일한 값 발견: ${patch_name_values} (SW현황의 ${row_in_sw_summary_sheet}행, 최신 검증서의 ${row_in_latest_validation_sheet}행)`);
