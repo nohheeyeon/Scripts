@@ -61,12 +61,11 @@ function main(workbook: ExcelScript.Workbook) {
         return null;
     }
 
-
-  function get_column_date(sheet: ExcelScript.Worksheet, column: string): { [key: string]: number } {
-    let patch_name_column_values: { [key: string]: number } = {};
+function get_column_data(sheet: ExcelScript.Worksheet, start_row: number, column: number): string[] {
+    let column_data: string[] = [];
     let total_row_count = sheet.getUsedRange().getRowCount();
-    let patch_name_column_range = sheet.getRange(`${column}2:${column}${total_row_count}`);
-    
+    let column_range = sheet.getRangeByIndexes(start_row - 1, column - 1, total_row_count - start_row + 1, 1);
+
     patch_name_column_range.getValues().forEach((row, index) => {
       let patch_name_values = row[0];
       if (patch_name_values !== null && patch_name_values !== undefined && patch_name_values !== "") {
