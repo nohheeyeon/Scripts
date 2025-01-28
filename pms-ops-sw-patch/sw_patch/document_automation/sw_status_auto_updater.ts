@@ -2,13 +2,29 @@ function main(workbook: ExcelScript.Workbook) {
     // "PMS SW 패치 현황 및 검증서" 불러오기
     let sheets = workbook.getWorksheets();
   
-    // SW현황과 최신 검증서 가져오기
-    let sw_summary_sheet = sheets[0];  // SW현황
-    let latest_validation_sheet = sheets[4];  // 최신 검증서
-    
-    if (!latest_validation_sheet) {
-        console.log("최신 검증서 시트를 찾을 수 없습니다.");
+    // SW현황 시트를 가져오기
+    let sw_summary_sheet = find_sheet_by_regex(sheets, /^SW현황$/);
+
+    if (!sw_summary_sheet) {
+        console.log("SW현황 시트를 찾을 수 없습니다.")
         return;
+    }
+
+    // 최신 검증서 시트를 가져오기
+    let latest_validation_sheet = find_sheet_by_regex(sheets, /^\d{4}-\{2}-\d{2} 검증서$/);
+
+    if (!latest_validation_sheet) {
+        console.log("최신 검증서 시트를 찾을 수 없습니다.")
+        return;
+    }
+
+    function find_sheet_by_regex(sheets: ExcelScript.Worksheet[], regex: RegExp): ExcelScript.Worksheet | null {
+        for (let sheet of sheets) {
+            if (regex.test(sheet.getName())) {
+                return sheet;
+            }
+        }
+        return null;
     }
 
     // SW현황의 제품명 데이터를 가져오기
@@ -20,26 +36,6 @@ function main(workbook: ExcelScript.Workbook) {
     // 제품명을 비교하여 데이터를 업데이트
     update_sw_summary_sheet(sw_summary_sheet, latest_validation_sheet, sw_patch_names, validation_patch_names);
   }
-
-// 최신 검증서 시트를 정규표현식으로 찾아 반환
-function find_latest_validation_sheet(sheets: ExcelScript.Worksheet[]): ExcelScript.Worksheet | null {
-    const regex = /^ \d{4}-\d{2}-\d{2} 검증서$/;
-    let latest_sheet: ExcelScript.Worksheet | null = null;
-    let latest_date: Date | null = null;
-
-    sheets.forEach(sheet => {
-        let sheet_name = sheet.getName();
-        if (regex.test(sheet_name)) {
-            let sheet_date = new Date(sheet_name.substring(0, 10));
-            if (!latest_date || sheet_date > latest_date) {
-                latest_date = sheet_date;
-                latest_sheet = sheet;
-            }
-        }
-    });
-
-    return latest_sheet
-}
   
   // SW현황의 D열(제품명) 데이터를 딕셔너리로 저장
   function get_patch_names(sheet: ExcelScript.Worksheet, column: string): { [key: string]: number } {
