@@ -4,16 +4,21 @@ function main(workbook: ExcelScript.Workbook) {
   
     // SW현황과 최신 검증서 가져오기
     let sw_summary_sheet = sheets[0];  // SW현황
-    let lastest_validation_sheet = sheets[4];  // 최신 검증서
+    let latest_validation_sheet = sheets[4];  // 최신 검증서
     
+    if (!latest_validation_sheet) {
+        console.log("최신 검증서 시트를 찾을 수 없습니다.");
+        return;
+    }
+
     // SW현황의 제품명 데이터를 가져오기
     let sw_patch_names = get_patch_names(sw_summary_sheet, 'D');
   
     // 최신 검증서의 제품명 데이터를 가져오기
-    let validation_patch_names = get_patch_names(lastest_validation_sheet, 'F');
+    let validation_patch_names = get_patch_names(latest_validation_sheet, 'F');
     
     // 제품명을 비교하여 데이터를 업데이트
-    update_sw_summary_sheet(sw_summary_sheet, lastest_validation_sheet, sw_patch_names, validation_patch_names);
+    update_sw_summary_sheet(sw_summary_sheet, latest_validation_sheet, sw_patch_names, validation_patch_names);
   }
   
   // SW현황의 D열(제품명) 데이터를 딕셔너리로 저장
