@@ -18,6 +18,15 @@ function main(workbook: ExcelScript.Workbook) {
         return;
     }
 
+    // 제품/제품명이라는 값을 가진 셀을 정규표현식을 사용하여 찾기
+    let sw_product_cell_address = find_cell_with_regex(sw_summary_sheet, /제품/);
+    let validation_product_cell_address = find_cell_with_regex(latest_validation_sheet, /제품명/);
+
+    if (sw_product_cell_address && validation_product_cell_address) {
+        console.log(`SW현황 "제품" 셀이 위치한 행과 열: ${sw_product_cell_address}, ${sw_product_cell_address.column}`)
+    };
+    console.log(`최신 검증서 "제품명" 셀이 위치한 행과 열: ${validation_product_cell_address.row}, ${validation_product_cell_address.column}`);
+
     function find_sheet_by_regex(sheets: ExcelScript.Worksheet[], regex: RegExp): ExcelScript.Worksheet | null {
         for (let sheet of sheets) {
             if (regex.test(sheet.getName())) {
