@@ -27,6 +27,21 @@ function main(workbook: ExcelScript.Workbook) {
         return null;
     }
 
+    enum SWColumns {
+        kProductname = "제품명",
+        kReleaseDate = "발표일",
+        KVersion = "버전",
+        KPatchFileName = "패치 파일명"
+    }
+
+
+    enum ValidationColumns {
+        kProductname = "제품명",
+        kReleaseDat가e = "발표일",
+        KVersion = "버전",
+        KPatchFileName = "패치 파일명"
+    }
+
     // SW현황의 제품명 데이터를 가져오기
     let sw_patch_names = get_patch_names(sw_summary_sheet, 'D');
   
