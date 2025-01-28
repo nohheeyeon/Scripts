@@ -76,6 +76,7 @@ while IFS= read -r file; do
     fi
 done <local_files_substr.txt
 
+no_ayt_files=()
 echo "동일한 이름의 .ayt 파일이 존재하지 않는 파일:"
 while IFS= read -r file; do
     if [[ "$file" == ms_files/* ]]; then
@@ -83,10 +84,16 @@ while IFS= read -r file; do
             ayt_file="${file}.ayt"
             if [[ ! -f "$LOCAL_DIRECTORY/$ayt_file" ]]; then
                 echo "$file"
+                no_ayt_files+=("$file")
             fi
         fi
     fi
 done <local_files_substr.txt
+
+# .ayt 파일이 존재하지 않는 파일이 없다면 메시지 출력
+if [ ${#no_ayt_files[@]} -eq 0 ]; then
+    echo "모든 파일에 대해 동일한 이름의 .ayt 파일이 존재합니다."
+fi
 
 # 임시 파일 삭제
 rm remote_files_txt local_files.txt
