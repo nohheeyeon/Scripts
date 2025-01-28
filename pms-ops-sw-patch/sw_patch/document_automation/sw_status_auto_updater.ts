@@ -49,33 +49,22 @@ function main(workbook: ExcelScript.Workbook) {
         return null;
     }
 
-    enum SWColumns {
-        kProductname = "제품명",
-        kReleaseDate = "발표일",
-        KVersion = "버전",
-        KPatchFileName = "패치 파일명"
+    function find_cell_with_regex(sheet: ExcelScript.Worksheet, regex: RegExp): { row: number, column: number } | null {
+        let used_range = sheet.getUsedRange();
+        let values = used_range.getValues();
+
+        for (let row = 0; row < values.length; row++) {
+            for (let col = 0; col < values[row].length; col++) {
+                if (regex.test(String(values[row][col]))){
+                    return { row: row + 1, column: col + 1 };
+                }
+            }
+        }
+        return null;
     }
 
 
-    enum ValidationColumns {
-        kProductname = "제품명",
-        kReleaseDat가e = "발표일",
-        KVersion = "버전",
-        KPatchFileName = "패치 파일명"
-    }
-
-    // SW현황의 제품명 데이터를 가져오기
-    let sw_patch_names = get_patch_names(sw_summary_sheet, 'D');
-  
-    // 최신 검증서의 제품명 데이터를 가져오기
-    let validation_patch_names = get_patch_names(latest_validation_sheet, 'F');
-    
-    // 제품명을 비교하여 데이터를 업데이트
-    update_sw_summary_sheet(sw_summary_sheet, latest_validation_sheet, sw_patch_names, validation_patch_names);
-  }
-  
-  // SW현황의 D열(제품명) 데이터를 딕셔너리로 저장
-  function get_patch_names(sheet: ExcelScript.Worksheet, column: string): { [key: string]: number } {
+  function get_column_date(sheet: ExcelScript.Worksheet, column: string): { [key: string]: number } {
     let patch_name_column_values: { [key: string]: number } = {};
     let total_row_count = sheet.getUsedRange().getRowCount();
     let patch_name_column_range = sheet.getRange(`${column}2:${column}${total_row_count}`);
