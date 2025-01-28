@@ -23,10 +23,23 @@ function main(workbook: ExcelScript.Workbook) {
     let validation_product_cell_address = find_cell_with_regex(latest_validation_sheet, /제품명/);
 
     if (sw_product_cell_address && validation_product_cell_address) {
-        console.log(`SW현황 "제품" 셀이 위치한 행과 열: ${sw_product_cell_address}, ${sw_product_cell_address.column}`)
-    };
+        console.log(`SW현황 "제품" 셀이 위치한 행과 열: ${sw_product_cell_address}, ${sw_product_cell_address.column}`);
     console.log(`최신 검증서 "제품명" 셀이 위치한 행과 열: ${validation_product_cell_address.row}, ${validation_product_cell_address.column}`);
 
+        // 해당 열의 데이터를 추출
+        let sw_product_names = get_column_data(sw_summary_sheet, sw_product_cell_address.column);
+        let validation_product_names = get_column_data(latest_validation_sheet, validation_product_cell_address.column);
+
+        // 데이터를 딕셔너리로 변환
+        let sw_patch_names = convert_to_dict(sw_product_names);
+        let validation_patch_names = convert_to_dict(validation_product_names);
+
+        // 제품명을 비교하여 데이터를 업데이트
+        update_sw_summary_sheet(sw_summary_sheet, latest_validation_sheet, sw_patch_names, validation_patch_names, sw_product_cell_address.column, validation_product_cell_address.column);
+    } else {
+        console.log("SW현황 시트 또는 최신 검증서 시트에서 '제품' 셀을 찾을 수 없습니다.")
+    }
+}
     function find_sheet_by_regex(sheets: ExcelScript.Worksheet[], regex: RegExp): ExcelScript.Worksheet | null {
         for (let sheet of sheets) {
             if (regex.test(sheet.getName())) {
