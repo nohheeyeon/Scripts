@@ -97,4 +97,19 @@ fi
 
 # 임시 파일 삭제
 rm remote_files_txt local_files.txt
+
+echo "파일 비교 완료"
+
+# 스크립트 성공 여부 확인 및 종료 코드
+if [ ${#no_ayt_files[@]} -eq 0 ]; then
+    echo "스크립트 실행 성공"
+    exit_code=0
+else
+    echo "스크립트 실행 실패"
+    exit_code=1
+fi
+
 bash
+
+# 스크립트 종료 코드 반환
+exit $exit_code
