@@ -19,20 +19,30 @@ function main(workbook: ExcelScript.Workbook) {
     }
   
     // "제품"/"제품명"이라는 값을 가진 셀을 정규표현식을 사용하여 찾기
-    let sw_product_cell_address = find_cell_with_regex(sw_summary_sheet, /제품/);
-    let validation_product_cell_address = find_cell_with_regex(latest_validation_sheet, /제품명/);
+    let sw_product_cell_address = find_cell_with_regex(sw_summary_sheet, /^제품$/);
+    let validation_product_cell_address = find_cell_with_regex(latest_validation_sheet, /^ 제품명$/);
   
-    if (sw_product_cell_address && validation_product_cell_address) {
+    // "발표일" 셀 찾기
+    let sw_release_date_cell_address = find_cell_with_regex(sw_summary_sheet, /^발표일$/);
+    let validation_release_date_cell_address = find_cell_with_regex(latest_validation_sheet, /^발표일$/);
+
+    if (sw_product_cell_address && validation_product_cell_address && sw_release_date_cell_address && validation_release_date_cell_address) {
       console.log(`SW현황 "제품" 셀이 위치한 행과 열: ${sw_product_cell_address.row}, ${sw_product_cell_address.column}`);
       console.log(`최신 검증서 "제품명" 셀이 위치한 행과 열: ${validation_product_cell_address.row}, ${validation_product_cell_address.column}`);
-  
+      console.log(`SW현황 "발표일" 셀이 위치한 행과 열: ${sw_release_date_cell_address.row}, ${sw_release_date_cell_address.column+1}`);
+      console.log(`최신 검증서 "발표일" 셀이 위치한 행과 열: ${validation_release_date_cell_address.row}, ${validation_release_date_cell_address.column}`);
+
       // "제품" 및 "제품명" 셀 하위의 모든 열 데이터를 추출
       let sw_product_names = get_column_data(sw_summary_sheet, sw_product_cell_address.row + 1, sw_product_cell_address.column+1);
       let validation_product_names = get_column_data(latest_validation_sheet, validation_product_cell_address.row + 1, validation_product_cell_address.column);
-  
+
+      // "발표일" 셀 하위의 모든 열 데이터를 추출
+      let validation_release_dates = get_column_data(latest_validation_sheet, validation_release_date_cell_address.row + 1, validation_release_date_cell_address.column);
+
       // 데이터 출력
       console.log("SW현황 시트 제품명 데이터:", sw_product_names);
       console.log("최신 검증서 시트 제품명 데이터:", validation_product_names);
+      console.log("최신 검증서 시트 발표일 데이터:", validation_release_dates);
 
       // "제품" 및 "제품명" 셀 하위에 같은 값이 있는 지 확인하고 출력
       let common_values = find_common_values(sw_product_names, validation_product_names);
