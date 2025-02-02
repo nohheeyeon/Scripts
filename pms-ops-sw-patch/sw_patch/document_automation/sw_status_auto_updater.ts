@@ -26,11 +26,17 @@ function main(workbook: ExcelScript.Workbook) {
     let sw_release_date_cell_address = find_cell_with_regex(sw_summary_sheet, /^발표일$/);
     let validation_release_date_cell_address = find_cell_with_regex(latest_validation_sheet, /^발표일$/);
 
-    if (sw_product_cell_address && validation_product_cell_address && sw_release_date_cell_address && validation_release_date_cell_address) {
+    // "버전" 셀 찾기
+    let sw_version_cell_address = find_cell_with_regex(sw_summary_sheet, /^버전$/);
+    let validation_version_cell_address = find_cell_with_regex(latest_validation_sheet, /^버전$/);
+
+    if (sw_product_cell_address && validation_product_cell_address && sw_release_date_cell_address && validation_release_date_cell_address && sw_version_cell_address && validation_version_cell_address) {
       console.log(`SW현황 "제품" 셀이 위치한 행과 열: ${sw_product_cell_address.row}, ${sw_product_cell_address.column}`);
       console.log(`최신 검증서 "제품명" 셀이 위치한 행과 열: ${validation_product_cell_address.row}, ${validation_product_cell_address.column}`);
       console.log(`SW현황 "발표일" 셀이 위치한 행과 열: ${sw_release_date_cell_address.row}, ${sw_release_date_cell_address.column+1}`);
       console.log(`최신 검증서 "발표일" 셀이 위치한 행과 열: ${validation_release_date_cell_address.row}, ${validation_release_date_cell_address.column}`);
+      console.log(`SW현황 "버전" 셀이 위치한 행과 열: ${sw_version_cell_address.row}, ${sw_version_cell_address.column}`);
+      console.log(`최신 검증서 "버전" 셀이 위치한 행과 열: ${validation_version_cell_address.row}, ${validation_version_cell_address.column}`);
 
       // "제품" 및 "제품명" 셀 하위의 모든 열 데이터를 추출
       let sw_product_names = get_column_data(sw_summary_sheet, sw_product_cell_address.row + 1, sw_product_cell_address.column+1);
@@ -43,6 +49,7 @@ function main(workbook: ExcelScript.Workbook) {
       console.log("SW현황 시트 제품명 데이터:", sw_product_names);
       console.log("최신 검증서 시트 제품명 데이터:", validation_product_names);
       console.log("최신 검증서 시트 발표일 데이터:", validation_release_dates);
+      console.log("최신 검증서 시트 버전 데이터:", validation_versions);
 
       // 공통된 제품명 찾기
       let common_values = find_common_values(sw_product_names, validation_product_names);
