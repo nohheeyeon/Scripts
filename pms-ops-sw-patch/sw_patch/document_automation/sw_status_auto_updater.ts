@@ -44,9 +44,25 @@ function main(workbook: ExcelScript.Workbook) {
       console.log("최신 검증서 시트 제품명 데이터:", validation_product_names);
       console.log("최신 검증서 시트 발표일 데이터:", validation_release_dates);
 
-      // "제품" 및 "제품명" 셀 하위에 같은 값이 있는 지 확인하고 출력
+      // 공통된 제품명 찾기
       let common_values = find_common_values(sw_product_names, validation_product_names);
       console.log("공통된 제품명:", common_values);
+
+      // 공통된 제품명과 같은 행에 있는 발표일 데이터를 SW현황 시트에 복사
+      for (let product of common_values) {
+        let product_indox_in_sw = sw_product_names.indexOf(product);
+        let product_index_in_validation = validation_product_names.indexOf(product);
+
+        if (product_index_in_validation !== -1 && product_indox_in_sw !== 1) {
+            let validation_release_date = validation_release_dates[product_index_in_validation];
+
+            // SW현황 시트의 제품명과 같은 행의 발표일 셀에 데이터 복사
+            let sw_release_date_cell = sw_summary_sheet.getCell(sw_release_date_cell_address.row + product_index_in_sw, sw_release_date_cell_address.column);
+            sw_release_date_cell.setValue(validation_release_date);
+
+            console.log(`제품명: ${product}, 최신 검증서 발표일: ${validation_release_date}, SW현황 시트에 복사 완료`)
+        }
+      }
     } else {
       console.log("SW현황 시트 또는 최신 검증서 시트에서 '제품' 셀을 찾을 수 없습니다.");
     }
