@@ -1,14 +1,25 @@
 import os
 import subprocess
+import sys
 import time
 
 import pandas as pd
 
+# 실행 순서
+# 1. 패치셋의 standalone 폴더를 각 VM의 "C:\Users\사용자이름\AppData\Local\Temp\package" 경로로 가져오기
+# 2. standalone_patch_auto_install.py의 sw_patch_list와 ms_patch_list를 이 달에 해당하는 패치 목록의 이름으로 변경하기
+# 3. standalone_patch_auto_install_X86.bat 또는 standalone_patch_auto_install_AMD64.bat를 관리자 권한으로 실행
+# 4. 스크립트 실행 종료 후 업데이트 확인
+#   - SW 패치 : "제어판\프로그램\프로그램 및 기능\프로그램 제거 또는 변경"에서 업데이트가 설치되었는지 확인
+#   - MS 패치 : "제어판\프로그램\프로그램 및 기능\설치된 업데이트"에서 KB ID가 설치되었는지 확인
+#                   또한 "C:\Users\사용자이름\AppData\Local\Temp\package" 위치에 해당 ID 값의 폴더가 생성되었는지 확인
+
 
 class StandAlonePatchInstaller:
-    def __init__(self, sw_patch_file, ms_patch_file):
+    def __init__(self, sw_patch_file, ms_patch_file, bit_version):
         self.sw_patch_file = sw_patch_file
         self.ms_patch_file = ms_patch_file
+        self.bit_version = bit_version
         self.patch_folder = os.path.join(
             os.path.expanduser("~"), r"AppData\Local\Temp\package\standalone"
         )
@@ -85,23 +96,35 @@ class StandAlonePatchInstaller:
 
     def process_sw_patch_list(self):
         print("SW 패치 리스트 처리 중")
-        self.process_patch_list(self.sw_patch_file, "비트", "AMD64", admin=True)
+        keyword = "X86" if self.bit_version == "X86" else "AMD64"
+        self.process_patch_list(self.sw_patch_file, "비트", keyword, admin=True)
 
     def process_ms_patch_list(self):
         print("MS 패치 리스트 처리 중")
-        self.process_patch_list(self.ms_patch_file, "제목", "64비트", admin=False)
+        keyword = "32비트" if self.bit_version == "X86" else "64비트"
+        self.process_patch_list(self.ms_patch_file, "제목", keyword, admin=False)
 
 
 if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("사용법: python standalone_patch_auto_install.py [X86|AMD64]")
+        sys.exit(1)
+
+    bit_version = sys.argv[1].upper()
+    if bit_version not in ["X86", "AMD64"]:
+        print("잘못된 인자 : X86 또는 AMD64만 지원됩니다.")
+        sys.exit(1)
+
     user_home = os.path.expanduser("~")
     desktop = os.path.join(user_home, "Desktop")
 
     sw_patch_list = os.path.join(desktop, "sw_patch_list.xlsx")
     ms_patch_list = os.path.join(desktop, "ms_patch_list.xlsx")
 
-    installer = StandAlonePatchInstaller(sw_patch_list, ms_patch_list)
+    installer = StandAlonePatchInstaller(sw_patch_list, ms_patch_list, bit_version)
 
     installer.process_sw_patch_list()
-    print("SW 패치 처리 후 대기 중...")
     time.sleep(180)
     installer.process_ms_patch_list()
+
+    print("스크립트 종료")
