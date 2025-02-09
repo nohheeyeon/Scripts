@@ -26,13 +26,9 @@ function main(workbook: ExcelScript.Workbook) {
     return;
   }
 
-  let validationData: { 
-    productNames: string[], 
-    releaseDates: string[], 
-    versions: string[], 
-    patchFiles: string[] 
-  } | null = extract_validation_data(latest_validation_sheet);
-
+  // 최신 검증서 시트에서 데이터 추출 및 업데이트
+  let validationData = extract_validation_data(latest_validation_sheet);
+  
   if (!validationData) {
     console.log("검증서 시트에서 데이터를 추출하는데 실패했습니다.");
     return;
