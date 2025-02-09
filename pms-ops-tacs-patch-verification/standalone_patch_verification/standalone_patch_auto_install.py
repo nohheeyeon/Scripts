@@ -7,7 +7,7 @@ from enum import Enum
 import pandas as pd
 
 # 실행 순서
-# 1. 패치셋의 standalone 폴더를 각 VM의 "C:\Users\사용자이름\AppData\Local\Temp\package" 경로로 가져오기
+# 1. 패치셋의 standalone 폴더를 각 VM의 "C:\Users\사용자이름\AppData\Local\Temp\package" 경로로 가져오기 (/package 폴더는 새롭게 생성해야 합니다.)
 # 2. standalone_patch_auto_install.py의 sw_patch_list_file와 ms_patch_list_file를 이 달에 해당하는 패치 목록의 이름으로 변경하기
 # 3. standalone_patch_auto_install_X86.bat 또는 standalone_patch_auto_install_AMD64.bat를 관리자 권한으로 실행
 # 4. 스크립트 실행 종료 후 업데이트 확인
@@ -40,7 +40,7 @@ class StandAlonePatchInstaller:
                     return os.path.join(root, file)
         return None
 
-    def install_patch_silently(self, patch_path):
+    def install_ms_patch(self, patch_path):
         cmd = [patch_path, "/quiet", "/norestart"]
 
         try:
@@ -102,7 +102,7 @@ class StandAlonePatchInstaller:
                     if patch_type == PatchType.SW:
                         success = self.install_sw_patch(patch_file_path)
                     elif patch_type == PatchType.MS:
-                        success = self.install_patch_silently(patch_file_path)
+                        success = self.install_ms_patch(patch_file_path)
                     if not success:
                         print(f"{patch_file_name} 처리 실패, 다음 패치로 이동")
                 else:
