@@ -6,30 +6,6 @@ import pandas as pd
 from docx import Document
 
 
-def create_docx_file_with_v1_content(folder_name, excel_file):
-    data_dir = os.path.dirname(os.path.abspath(__file__))
-    downloads_path = os.path.join(data_dir, "data")
-    now = datetime.now()
-    month = now.strftime("%m")
-    date_str = now.strftime("%y%m%d")
-    docx_file_name = os.path.join(
-        downloads_path, f"{month}월 증분 패치 검증 QA 결과서_{date_str}.docx"
-    )
-
-    content = list_files_in_v1(folder_name, excel_file)
-
-    document = Document()
-    document.add_heading(f"{month}월 증분 패치 검증 QA 결과서", level=1)
-
-    for line in content.split("\n"):
-        document.add_paragraph(line)
-
-    document.save(docx_file_name)
-
-    print(f"'{docx_file_name}' 파일이 생성되고 내용이 추가되었습니다.")
-    return docx_file_name
-
-
 def map_patch_titles(file_list, excel_file):
     df = pd.read_excel(excel_file)
     patch_title_map = dict(zip(df["패치파일"], df["제목"]))
@@ -103,9 +79,36 @@ def list_files_in_v1(folder_name, excel_file):
     return "\n\n".join(result)
 
 
-folder_name = "pms_patch/pms_patch"
-data_dir = os.path.dirname(os.path.abspath(__file__))
-downloads_path = os.path.join(data_dir, "data")
-excel_file = os.path.join(downloads_path, "ms_patch_list.xlsx")
+def update_docx_with_content(source_file_path, content_to_add, new_file_path):
+    document = Document(source_file_path)
 
-create_docx_file_with_v1_content(folder_name, excel_file)
+    try:
+        table = document.tables[1]
+        target_cell = table.rows[4].cells[1]
+
+        if "확인 사항" in target_cell.text:
+            target_cell.text += f"\n{content_to_add}"
+
+        document.save(new_file_path)
+        print(f"파일이 성공적으로 생성되었습니다: {new_file_path}")
+    except IndexError:
+        print("표 또는 셀을 찾을 수 없습니다.")
+    except Exception as e:
+        print(f"오류 발생: {e}")
+
+
+data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+docx_file_path = os.path.join(data_dir, "증분 패치 검증 QA 결과서.docx")
+excel_file = os.path.join(data_dir, "ms_patch_list.xlsx")
+folder_name = "pms_patch/pms_patch"
+
+now = datetime.now()
+month = now.strftime("%m")
+date_str = now.strftime("%y%m%d")
+new_docx_file_path = os.path.join(
+    data_dir, f"{month}월 증분 패치 검증 QA 결과서_{date_str}.docx"
+)
+
+previous_output = list_files_in_v1(folder_name, excel_file)
+
+update_docx_with_content(docx_file_path, previous_output, new_docx_file_path)
