@@ -26,6 +26,20 @@ function main(workbook: ExcelScript.Workbook) {
     return;
   }
 
+  let validationData: { 
+    productNames: string[], 
+    releaseDates: string[], 
+    versions: string[], 
+    patchFiles: string[] 
+  } | null = extract_validation_data(latest_validation_sheet);
+
+  if (!validationData) {
+    console.log("검증서 시트에서 데이터를 추출하는데 실패했습니다.");
+    return;
+  }
+  update_sw_sheet(sw_summary_sheet, validationData);
+}
+
 function extract_validation_data(sheet: ExcelScript.Worksheet): {
   productNames: string[], 
   releaseDates: string[], 
@@ -134,7 +148,6 @@ function get_column_data(sheet: ExcelScript.Worksheet, start_row: number, column
   return column_data;
 }
 
-// "제품" 및 "제품명"에서 같은 값을 찾는 함수
 function find_common_values(array1: string[], array2: string[]): string[] {
   let common_values: string[] = [];
 
