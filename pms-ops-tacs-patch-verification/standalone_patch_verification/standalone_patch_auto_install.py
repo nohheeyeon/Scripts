@@ -1,3 +1,19 @@
+"""
+이 스크립트는 Windows VM에서 SW 및 MS 패치를 자동으로 설치하고 확인하는 작업을 자동화합니다.
+패치 설치 및 확인은 다음 단계로 진행됩니다:
+
+사용법
+1. TACS 패치셋의 standalone 폴더를 VM의 "standalone_patch_verification/package" 경로로 복사.
+2. standalone_patch_verification/data 폴더에 sw_patch_list.xlsx와 ms_patch_list.xlsx 파일 배치.
+3. 환경에 맞는 standalone_patch_auto_install_*.bat 파일을 관리자 권한으로 실행.
+4. 스크립트 실행 완료 후 업데이트 확인:
+  - SW 패치:
+    - [제어판 > 프로그램 및 기능 > 프로그램 제거 또는 변경]에서 설치된 업데이트 확인.
+  - MS 패치:
+    - [제어판 > 프로그램 및 기능 > 설치된 업데이트]에서 설치된 KBID 확인.
+    - "standalone_patch_verification/package" 하위 경로에 KBID 이름으로 디렉터리가 생성되었는지 확인.
+"""
+
 import logging
 import os
 import subprocess
@@ -9,16 +25,6 @@ from pathlib import Path
 from typing import List, Optional
 
 import pandas as pd
-
-# 실행 순서
-
-# 1. 패치셋의 standalone 폴더를 각 VM의 "C:\Users\사용자이름\AppData\Local\Temp\package" 경로로 가져오기 (/package 폴더는 새롭게 생성해야 합니다.)
-# 2. standalone_patch_verification/data 폴더에 sw_patch_list.xlsx와 ms_patch_list.xlsx 파일 배치
-# 3. standalone_patch_auto_install_X86.bat 또는 standalone_patch_auto_install_AMD64.bat를 관리자 권한으로 실행
-# 4. 스크립트 실행 종료 후 업데이트 확인
-#   - SW 패치 : "제어판\프로그램\프로그램 및 기능\프로그램 제거 또는 변경"에서 업데이트가 설치되었는지 확인
-#   - MS 패치 : "제어판\프로그램\프로그램 및 기능\설치된 업데이트"에서 KB ID가 설치되었는지 확인
-#                   또한 "C:\Users\사용자이름\AppData\Local\Temp\package" 위치에 해당 ID 값의 폴더가 생성되었는지 확인
 
 module_name = os.path.splitext(os.path.basename(__file__))[0]
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
