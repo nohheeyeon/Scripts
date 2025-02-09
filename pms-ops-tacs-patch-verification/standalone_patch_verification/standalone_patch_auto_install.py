@@ -19,6 +19,7 @@ import pandas as pd
 #   - SW 패치 : "제어판\프로그램\프로그램 및 기능\프로그램 제거 또는 변경"에서 업데이트가 설치되었는지 확인
 #   - MS 패치 : "제어판\프로그램\프로그램 및 기능\설치된 업데이트"에서 KB ID가 설치되었는지 확인
 #                   또한 "C:\Users\사용자이름\AppData\Local\Temp\package" 위치에 해당 ID 값의 폴더가 생성되었는지 확인
+
 module_name = os.path.splitext(os.path.basename(__file__))[0]
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -109,7 +110,7 @@ class StandAlonePatchInstaller:
             return False
 
     def parse_patch_list_from_excel(
-        self, excel_file: str, column_name: str, keyword: str
+        self, *, excel_file: str, column_name: str, keyword: str
     ) -> List[str]:
         try:
             df = pd.read_excel(excel_file, engine="openpyxl")
@@ -145,7 +146,7 @@ class StandAlonePatchInstaller:
         logging.info("SW 패치 리스트 처리 중")
         keyword = "X86" if self.target_architecture == "X86" else "AMD64"
         patch_file_names = self.parse_patch_list_from_excel(
-            self.sw_patch_list_file, "비트", keyword
+            excel_file=self.sw_patch_list_file, column_name="비트", keyword=keyword
         )
         self.install_patches(patch_file_names, PatchType.SW)
 
@@ -153,7 +154,7 @@ class StandAlonePatchInstaller:
         logging.info("MS 패치 리스트 처리 중")
         keyword = "32비트" if self.target_architecture == "X86" else "64비트"
         patch_file_names = self.parse_patch_list_from_excel(
-            self.ms_patch_list_file, "제목", keyword
+            excel_file=self.ms_patch_list_file, column_name="제목", keyword=keyword
         )
         self.install_patches(patch_file_names, PatchType.MS)
 
