@@ -1,4 +1,5 @@
 import os
+from collections import defaultdict
 from datetime import datetime
 
 import pandas as pd
@@ -58,5 +59,78 @@ folder_name = "pms_patch/pms_patch"
 data_dir = os.path.dirname(os.path.abspath(__file__))
 downloads_path = os.path.join(data_dir, "data")
 excel_file = os.path.join(downloads_path, "ms_patch_list.xlsx")
+
+
+def list_files_in_v1(folder_name, excel_file):
+    data_dir = os.path.dirname(os.path.abspath(__file__))
+    downloads_path = os.path.join(data_dir, "data")
+    folder_path = os.path.join(downloads_path, folder_name)
+    v1_folder_path = os.path.join(folder_path, "v1")
+
+    if not os.path.exists(v1_folder_path) or not os.path.isdir(v1_folder_path):
+        return "v1 폴더가 존재하지 않습니다."
+
+    result = []
+    section_count = 0
+    sw_files_grouped = defaultdict(list)
+
+    for root, dirs, files in os.walk(v1_folder_path):
+        relative_path = os.path.relpath(root, v1_folder_path)
+        relative_path = relative_path.replace(os.sep, "/")
+
+        if "sw_files" in relative_path:
+            parts = relative_path.split("/")
+            if len(parts) > 1:
+                base_dir = parts[1]
+                for file in files:
+                    file_path = os.path.relpath(
+                        os.path.join(root, file),
+                        os.path.join(v1_folder_path, "sw_files", base_dir),
+                    ).replace(os.sep, "/")
+                    sw_files_grouped[base_dir].append(file_path)
+        else:
+            if (
+                "meta/180314/pms_bigboss_sw/sw" in relative_path
+                or "meta/180314/pms_bigboss/ms" in relative_path
+            ):
+                filtered_files = [
+                    file for file in files if not file.endswith(".zip")
+                ] + dirs
+            else:
+                filtered_files = [
+                    file
+                    for file in files
+                    if (file.endswith(".cab") or file.endswith(".exe"))
+                    and not file.endswith(".zip")
+                ]
+
+            if filtered_files:
+                section_count += 1
+                prefix = chr(96 + section_count) + "."
+                file_count = len(filtered_files)
+
+                mapped_files = map_patch_titles(filtered_files, excel_file)
+                file_list = [f"{i + 1}) {file}" for i, file in enumerate(mapped_files)]
+                section = (
+                    f"{prefix} {relative_path} 하위 {file_count}개 파일 확인\n"
+                    + "\n".join(file_list)
+                )
+                result.append(section)
+
+    for base_dir, grouped_files in sw_files_grouped.items():
+        section_count += 1
+        prefix = chr(96 + section_count) + "."
+        file_count = len(grouped_files)
+
+        mapped_files = map_patch_titles(grouped_files, excel_file)
+        file_list = [f"{i + 1}) {file}" for i, file in enumerate(mapped_files)]
+        section = (
+            f"{prefix} sw_files/{base_dir} 하위 {file_count}개 파일 확인\n"
+            + "\n".join(file_list)
+        )
+        result.append(section)
+
+    return "\n\n".join(result)
+
 
 create_hwp_file_with_v1_content(folder_name, excel_file)
