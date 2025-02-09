@@ -1,5 +1,13 @@
+////////////////////////////////////////////////////////////////////////////////////
+// "PMS SW 패치 현황 및 검증서"를 최신화시키는 과정에서 사용
+
+// 코드 실행 과정 :
+// 1. "PMS SW 패치 현황 및 검증서" 접근
+// 2. 첫 번째 시트(SW현황)과 정규표현식으로 찾은 최신 검증서 시트의 제품명을 비교
+// 3. 동일한 제품명이 있다면, 최신 검증서 시트의 데이터를 SW현황 시트로 복사(복사 항목 : 발표일, 버전, 패치 파일명)
+////////////////////////////////////////////////////////////////////////////////////
 function main(workbook: ExcelScript.Workbook) {
-  // "PSW 패치 현황 및 검증서" 불러오기
+  // "PMS SW 패치 현황 및 검증서" 불러오기
   let sheets = workbook.getWorksheets();
 
   // SW현황 시트를 가져오기
@@ -18,75 +26,33 @@ function main(workbook: ExcelScript.Workbook) {
     return;
   }
 
-  // "제품"/"제품명"이라는 값을 가진 셀을 정규표현식을 사용하여 찾기
-  let sw_product_cell_address = find_cell_with_regex(sw_summary_sheet, /^제품$/);
-  let validation_product_cell_address = find_cell_with_regex(latest_validation_sheet, /^제품명$/);
+function extract_validation_data(sheet: ExcelScript.Worksheet): {
+  productNames: string[], 
+  releaseDates: string[], 
+  versions: string[], 
+  patchFiles: string[]
+} | null {
 
-  // "발표일" 셀 찾기
-  let sw_release_date_cell_address = find_cell_with_regex(sw_summary_sheet, /^발표일$/);
-  let validation_release_date_cell_address = find_cell_with_regex(latest_validation_sheet, /^발표일$/);
+  let productCellAddress = find_cell_with_regex(sheet, /^제품명$/);
+  let releaseDateCellAddress = find_cell_with_regex(sheet, /^발표일$/);
+  let versionCellAddress = find_cell_with_regex(sheet, /^버전$/);
+  let patchFileCellAddress = find_cell_with_regex(sheet, /^패치 파일$/);
 
-  // "버전" 셀 찾기
-  let sw_version_cell_address = find_cell_with_regex(sw_summary_sheet, /^버전\(G\)$/);
-  let validation_version_cell_address = find_cell_with_regex(latest_validation_sheet, /^버전$/);
-
-  // "패치 파일(H)"/"패치 파일" 셀 찾기
-  let sw_patch_file_cell_address = find_cell_with_regex(sw_summary_sheet, /^패치 파일\(H\)$/);
-  let validation_patch_file_cell_address = find_cell_with_regex(latest_validation_sheet, /^패치 파일$/);
-
-  if (sw_product_cell_address && validation_product_cell_address && sw_release_date_cell_address && validation_release_date_cell_address && sw_version_cell_address && validation_version_cell_address && sw_patch_file_cell_address && validation_patch_file_cell_address) {
-
-    // "제품" 및 "제품명" 셀 하위의 모든 열 데이터를 추출
-    let sw_product_names = get_column_data(sw_summary_sheet, sw_product_cell_address.row + 1, sw_product_cell_address.column + 1);
-    let validation_product_names = get_column_data(latest_validation_sheet, validation_product_cell_address.row + 1, validation_product_cell_address.column);
-
-    // "발표일" 셀 하위의 모든 열 데이터를 추출
-    let validation_release_dates = get_column_data(latest_validation_sheet, validation_release_date_cell_address.row + 1, validation_release_date_cell_address.column);
-    
-    // "버전" 셀 하위의 모든 열 데이터를 추출
-    let validation_versions = get_column_data(latest_validation_sheet, validation_version_cell_address.row + 1, validation_version_cell_address.column);
-   
-    // "패치 파일(H)" 및 "패치 파일" 셀 하위의 모든 열 데이터를 추출
-    let validation_patch_file = get_column_data(latest_validation_sheet, validation_patch_file_cell_address.row + 1, validation_patch_file_cell_address.column);
-
-    // 공통된 제품명 찾기
-    let common_values = find_common_values(sw_product_names, validation_product_names);
-    console.log("공통된 제품명:", common_values);
-
-    // 로그를 저장할 배열 생성
-    let logMessages: string[] = [];
-
-    // 공통된 제품명과 같은 행에 있는 발표일 데이터를 SW현황 시트에 복사
-    for (let product of common_values) {
-      let product_index_in_sw = sw_product_names.indexOf(product);
-      let product_index_in_validation = validation_product_names.indexOf(product);
-
-      if (product_index_in_validation !== -1 && product_index_in_sw !== -1) {
-
-        let validation_release_date = validation_release_dates[product_index_in_validation];
-        let sw_release_date_cell = sw_summary_sheet.getCell(sw_release_date_cell_address.row + product_index_in_sw, sw_release_date_cell_address.column);
-        let validation_patch_files = validation_patch_file[product_index_in_validation];
-        let sw_patch_file_cell = sw_summary_sheet.getCell(sw_patch_file_cell_address.row + product_index_in_sw, sw_patch_file_cell_address.column);
-        let validation_product_version = validation_versions[product_index_in_validation];
-        let sw_product_version_cell = sw_summary_sheet.getCell(sw_version_cell_address.row + product_index_in_sw, sw_version_cell_address.column);
-        
-        // 발표일 데이터를 SW현황 시트에 복사
-        sw_release_date_cell.setValue(validation_release_date);
-        sw_patch_file_cell.setValue(validation_patch_files);
-        sw_product_version_cell.setValue(validation_product_version);
-
-        // 로그 메시지를 배열에 추가
-        logMessages.push(`[제품명: ${product}, 발표일: ${validation_release_date}, 패치 파일: ${validation_patch_files}, 버전: ${validation_product_version}]`);
-      }
-    }
-
-    // 배열 형태로 복사 완료 로그 메시지 출력
-    console.log("복사 완료된 제품:", logMessages);
-
-  } else {
-    console.log("SW현황 시트 또는 최신 검증서 시트에서 '제품' 셀을 찾을 수 없습니다.");
+  if (!productCellAddress || !releaseDateCellAddress || !versionCellAddress || !patchFileCellAddress) {
+    return null;
   }
 
+  let productNames: string[] = get_column_data(sheet, productCellAddress.row + 1, productCellAddress.column);
+  let releaseDates: string[] = get_column_data(sheet, releaseDateCellAddress.row + 1, releaseDateCellAddress.column);
+  let versions: string[] = get_column_data(sheet, versionCellAddress.row + 1, versionCellAddress.column);
+  let patchFiles: string[] = get_column_data(sheet, patchFileCellAddress.row + 1, patchFileCellAddress.column);
+
+  return {
+    productNames,
+    releaseDates,
+    versions,
+    patchFiles
+  };
 }
 
 function find_sheet_by_regex(sheets: ExcelScript.Worksheet[], regex: RegExp): ExcelScript.Worksheet | null {
