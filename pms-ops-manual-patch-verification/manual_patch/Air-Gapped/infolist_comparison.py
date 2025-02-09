@@ -126,3 +126,14 @@ remote_only_files = [file for file in remote_files if file not in local_files_se
 log("원격 서버에만 있는 파일:")
 for file in remote_only_files:
     print(file)
+
+log("동일한 이름의 .ayt 파일이 존재하지 않는 파일:")
+for file in all_file_names:
+    if file.startswith("ms_files/") and file.split(".")[-1] in {"cab", "exe"}:
+        ayt_file_path = os.path.join(LOCAL_DIRECTORY, f"{file}.ayt")
+        if not os.path.isfile(ayt_file_path):
+            print(file)
+            no_ayt_files.append(file)
+
+if not no_ayt_files:
+    log("모든 파일에 대해 동일한 이름의 .ayt 파일이 존재합니다.")
