@@ -114,3 +114,15 @@ with open(remote_output_txt_path, "w", encoding="utf-8") as output_file:
     for file in remote_files:
         output_file.write(file + "\n")
 log("원격 서버 파일 목록 작성 완료")
+
+remote_files_set = set(remote_files)
+local_only_files = [file for file in all_file_names if file not in remote_files_set]
+log("로컬 디렉토리에만 있는 파일:")
+for file in local_only_files:
+    print(file)
+
+local_files_set = set(all_file_names)
+remote_only_files = [file for file in remote_files if file not in local_files_set]
+log("원격 서버에만 있는 파일:")
+for file in remote_only_files:
+    print(file)
