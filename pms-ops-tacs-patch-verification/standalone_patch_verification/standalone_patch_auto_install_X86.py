@@ -1,6 +1,8 @@
 import os
 import subprocess
 
+import pandas as pd
+
 user_home = os.path.expanduser("~")
 desktop = os.path.join(user_home, "Desktop")
 
@@ -57,3 +59,25 @@ def run_as_admin(file_path):
     except Exception as e:
         print(f"관리자 실행 중 오류 발생: {e}")
         return False
+
+
+def process_sw_patch_list(excel_file):
+    try:
+        df = pd.read_excel(excel_file, engine="openpyxl")
+        filtered_data = df[df["비트"].str.contains("X86", na=False)]
+        patch_files = filtered_data["패치파일"].dropna().tolist()
+
+        for patch in patch_files:
+            try:
+                patch_path = find_file_in_folder(patch_folder, patch)
+                if patch_path:
+                    print(f"{patch_path}")
+                    success = run_as_admin(patch_path)
+                    if not success:
+                        print(f"{patch} 처리 실패, 다음 패치로 이동")
+                else:
+                    print(f"패치 파일을 찾을 수 없음: {patch}")
+            except Exception as e:
+                print(f"{patch} 처리 중 오류 발생: {e}")
+    except Exception as e:
+        print(f"sw_patch_list 처리 중 오류 발생: {e}")
