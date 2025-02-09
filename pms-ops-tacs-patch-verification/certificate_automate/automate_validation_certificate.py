@@ -89,8 +89,13 @@ def update_docx_with_content(source_file_path, content_to_add, new_file_path):
             if row.cells[0].text.strip() in target_numbers:
                 for cell in row.cells:
                     if "확인 사항" in cell.text:
-                        if content_to_add not in cell.text:
-                            cell.text += f"\n{content_to_add}"
+                        cell.text = (
+                            cell.text.split("확인 사항")[0]
+                            + "확인 사항\n"
+                            + content_to_add
+                            + "\n"
+                            + "\n".join(cell.text.split("확인 사항")[1:])
+                        )
 
         document.save(new_file_path)
         print(f"파일이 성공적으로 생성되었습니다: {new_file_path}")
