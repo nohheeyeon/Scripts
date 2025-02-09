@@ -21,7 +21,6 @@ import pandas as pd
 module_name = os.path.splitext(os.path.basename(__file__))[0]
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 log_dir = os.path.join(os.path.dirname(__file__), "logs")
-os.makedirs(log_dir, exist_ok=True)
 log_file = os.path.join(log_dir, f"{module_name}_{timestamp}.log")
 
 logging.basicConfig(
@@ -44,14 +43,6 @@ class StandAlonePatchInstaller:
         self.temp_package_dir = os.path.join(
             os.environ.get("USERPROFILE", ""), r"AppData\Local\Temp\package"
         )
-
-        if not os.path.exists(self.temp_package_dir):
-            os.makedirs(self.temp_package_dir, exist_ok=True)
-            logging.error(
-                f"패치 파일 디렉토리가 존재하지 않아 생성했습니다: {self.temp_package_dir}"
-            )
-            logging.error("패치 파일을 이동시킨 후 스크립트를 다시 실행하세요.")
-            sys.exit(1)
 
     def find_file_in_path(self, base_path, target_name):
         for root, dirs, files in os.walk(base_path):
