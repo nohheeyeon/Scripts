@@ -22,7 +22,7 @@ import time
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 import pandas as pd
 
@@ -62,7 +62,7 @@ class StandAlonePatchInstaller:
         self.target_architecture = target_architecture
         self.temp_package_dir = os.path.join(script_dir, "package")
 
-    def find_file_in_path(self, base_path: str, target_name: str) -> Optional[str]:
+    def find_file_in_path(self, base_path: str, target_name: str) -> str | None:
         for root, dirs, files in os.walk(base_path):
             for file in files:
                 if (
@@ -115,7 +115,7 @@ class StandAlonePatchInstaller:
 
     def parse_patch_list_from_excel(
         self, *, excel_file: str, column_name: str, keyword: str
-    ) -> List[str]:
+    ) -> list[str]:
         try:
             df = pd.read_excel(excel_file, engine="openpyxl")
             filtered_data = df[df[column_name].str.contains(keyword, na=False)]
@@ -126,7 +126,7 @@ class StandAlonePatchInstaller:
             return []
 
     def install_patches(
-        self, patch_file_names: List[str], patch_type: PatchType
+        self, patch_file_names: list[str], patch_type: PatchType
     ) -> None:
         for patch_file_name in patch_file_names:
             try:
