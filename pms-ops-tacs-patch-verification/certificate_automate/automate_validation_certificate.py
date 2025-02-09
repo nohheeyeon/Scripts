@@ -532,56 +532,6 @@ class DocumentUpdater:
         self.update_completion_date(new_docx_file_path)
 
 
-class PatchReportGenerator:
-    def __init__(self, base_path, excel_processor, file_manager, document_updater):
-        self.base_path = base_path
-        self.excel_processor = excel_processor
-        self.file_manager = file_manager
-        self.document_updater = document_updater
-
-    def generate_report(self):
-        try:
-            patch_dir_name = self.file_manager.get_patch_dir()
-            v1_dir_path = self.file_manager.find_v1_dir()
-            ms_excel_file = os.path.join(self.base_path, "ms_patch_list.xlsx")
-            sw_excel_file = os.path.join(self.base_path, "sw_patch_list.xlsx")
-            docx_file_path = os.path.join(
-                self.base_path, "증분 패치 검증 QA 결과서.docx"
-            )
-
-            now = datetime.now()
-            month = now.strftime("%m")
-            date_str = now.strftime("%y%m%d")
-            new_docx_file_path = os.path.join(
-                self.base_path, f"{month}월 증분 패치 검증 QA 결과서_{date_str}.docx"
-            )
-
-            file_list_content = self.file_manager.list_files_in_v1(
-                v1_dir_path, ms_excel_file
-            )
-
-            self.document_updater.update_docx_with_content(
-                docx_file_path, file_list_content, new_docx_file_path, month
-            )
-
-            self.document_updater.update_standalone_office_patch_section(
-                new_docx_file_path, self.base_path
-            )
-
-            self.document_updater.update_standalone_software_patch_section(
-                new_docx_file_path, sw_excel_file, self.base_path
-            )
-
-            self.document_updater.update_completion_date(new_docx_file_path)
-
-            print(f"리포트가 성공적으로 생성되었습니다: {new_docx_file_path}")
-            return new_docx_file_path
-
-        except Exception as e:
-            print(f"리포트 생성 중 오류 발생: {e}")
-            return None
-
-
 if __name__ == "__main__":
     base_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
