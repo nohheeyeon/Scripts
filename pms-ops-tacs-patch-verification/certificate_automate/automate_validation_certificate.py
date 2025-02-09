@@ -8,7 +8,7 @@ from docx import Document
 from docx.shared import Pt
 
 
-class PatchFileManager:
+class PatchDirectoryHandler:
     def __init__(self, base_path):
         self.base_path = base_path
 
@@ -246,7 +246,9 @@ class DocumentUpdater:
     ):
         document = Document(source_file_path)
         try:
-            data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+            data_dir = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), "../data"
+            )
             patch_dir_name = self.get_patch_dir(data_dir)
             current_year = datetime.now().year
             previous_year, previous_month = self.get_previous_year_and_month()
@@ -507,9 +509,9 @@ class DocumentUpdater:
         base_path = self.base_path
         patch_dir_name = self.file_manager.get_patch_dir()
         v1_dir_path = self.file_manager.find_v1_dir()
-        ms_excel_file = os.path.join(base_path, "ms_patch_list.xlsx")
-        sw_excel_file = os.path.join(base_path, "sw_patch_list.xlsx")
-        docx_file_path = os.path.join(base_path, "증분 패치 검증 QA 결과서.docx")
+        ms_excel_file = os.path.join(self.base_path, "ms_patch_list.xlsx")
+        sw_excel_file = os.path.join(self.base_path, "sw_patch_list.xlsx")
+        docx_file_path = os.path.join(self.base_path, "증분 패치 검증 QA 결과서.docx")
 
         now = datetime.now()
         month = now.strftime("%m")
@@ -533,10 +535,10 @@ class DocumentUpdater:
 
 
 if __name__ == "__main__":
-    base_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+    base_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../data")
 
     excel_processor = ExcelDataProcessor()
-    file_manager = PatchFileManager(base_path)
+    file_manager = PatchDirectoryHandler(base_path)
 
     document_updater = DocumentUpdater(base_path, excel_processor, file_manager)
 
