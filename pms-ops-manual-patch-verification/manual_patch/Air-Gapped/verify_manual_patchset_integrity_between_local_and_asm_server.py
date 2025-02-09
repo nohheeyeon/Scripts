@@ -313,7 +313,7 @@ def check_office_patch_inclusion(file_list_path):
         "w7sp1embed-x86": "Windows Embedded 7 SP1 (x86)",
         "w7rtmembed-x64": "Windows Embedded 7 RTM (X64)",
         "w7rtmembed-x86": "Windows Embedded 7 RTM (X86)",
-        "xp3embed-x64": "Windows Embedded XP SP3 (x64)",
+        # "xp3embed-x64": "Windows Embedded XP SP3 (x64)", 지원 종류 범위에 따라 빌드 설정에서 제외
         "xp3embed-x86": "Windows Embedded XP SP3 (x86)",
         # Office
         "2019-all": "Office 2019 패치셋에 포함",
