@@ -54,9 +54,7 @@ class StandAlonePatchInstaller:
         self.sw_patch_list_file = sw_patch_list_file
         self.ms_patch_list_file = ms_patch_list_file
         self.target_architecture = target_architecture
-        self.temp_package_dir = os.path.join(
-            os.environ.get("USERPROFILE", ""), r"AppData\Local\Temp\package"
-        )
+        self.temp_package_dir = os.path.join(script_dir, "package")
 
     def find_file_in_path(self, base_path: str, target_name: str) -> Optional[str]:
         for root, dirs, files in os.walk(base_path):
