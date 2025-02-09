@@ -441,6 +441,28 @@ def update_software_patch_in_docx(docx_path, sw_excel_path, base_path):
     document.save(docx_path)
 
 
+def update_completion_date(docx_path):
+    document = Document(docx_path)
+    today = datetime.now()
+
+    last_table = document.tables[-1]
+    last_row = last_table.rows[-1]
+    last_cell = last_row.cells[-1]
+
+    last_cell.text = last_cell.text.replace("년", f"{today.year}년", 1)
+    last_cell.text = last_cell.text.replace("월", f"{today.month:02d}월", 1)
+
+    if "일" in last_cell.text:
+        last_occurrence_index = last_cell.text.rfind("일")
+        last_cell.text = (
+            last_cell.text[:last_occurrence_index]
+            + f"{today.day:02d}일"
+            + last_cell.text[last_occurrence_index + 1 :]
+        )
+
+    document.save(docx_path)
+
+
 data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 folder_name = get_unique_subfolder(data_dir)
 v1_folder_path = find_v1_folder(os.path.join(data_dir, folder_name))
@@ -459,3 +481,4 @@ update_docx_with_content(docx_file_path, previous_output, new_docx_file_path, mo
 update_office_patch_section(new_docx_file_path, data_dir)
 sw_excel_file = os.path.join(data_dir, "sw_patch_list.xlsx")
 update_software_patch_in_docx(new_docx_file_path, sw_excel_file, data_dir)
+update_completion_date(new_docx_file_path)
