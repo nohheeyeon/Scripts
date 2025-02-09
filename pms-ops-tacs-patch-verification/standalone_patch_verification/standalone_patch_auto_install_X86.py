@@ -4,13 +4,14 @@ import time
 
 import pandas as pd
 
-user_home = os.path.expanduser("~")
-desktop = os.path.join(user_home, "Desktop")
 
-sw_patch_list = os.path.join(desktop, "sw_patch_list.xlsx")
-ms_patch_list = os.path.join(desktop, "ms_patch_list.xlsx")
-
-patch_folder = os.path.join(user_home, r"AppData\Local\Temp\package\standalone")
+class StandAlonePatchInstaller:
+    def __init__(self, sw_patch_file, ms_patch_file):
+        self.sw_patch_file = sw_patch_file
+        self.ms_patch_file = ms_patch_file
+        self.patch_folder = os.path.join(
+            os.path.expanduser("~"), r"AppData\Local\Temp\package\standalone"
+        )
 
 
 def find_file_in_folder(base_folder, target_name):
