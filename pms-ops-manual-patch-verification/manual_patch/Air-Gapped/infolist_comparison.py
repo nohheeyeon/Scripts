@@ -124,7 +124,6 @@ log("로컬 파일 목록 작성 완료")
 remote_files, modified_files = fetch_remote_files(
     SSH_SERVER, PORT, USERNAME, PASSWORD, REMOTE_DIRECTORY
 )
-log(f"중복 제거된 원격 서버 파일 목록 저장 중: {remote_output_txt_path}")
 with open(remote_output_txt_path, "w", encoding="utf-8") as output_file:
     for file in sorted(remote_files):
         output_file.write(file + "\n")
@@ -138,3 +137,27 @@ log("이번 달에 수정된 원격 서버 파일 목록 작성 완료")
 
 def normalize_path(file_path, is_windows=True):
     return file_path.replace("\\", "/")
+
+
+def check_inclusion(reference_file, target_file, description):
+    with open(reference_file, "r", encoding="utf-8") as ref_file:
+        reference_list = set(normalize_path(line.strip()) for line in ref_file)
+
+    with open(target_file, "r", encoding="utf-8") as tgt_file:
+        target_list = set(normalize_path(line.strip()) for line in tgt_file)
+
+    not_included = reference_list - target_list
+    if not_included:
+        log(f"{description} 포함되지 않은 파일 목록:")
+        for file in sorted(not_included):
+            log(file)
+    else:
+        log(f"{description} 모든 파일이 포함되어 있습니다.")
+
+
+check_inclusion(
+    remote_modified_output_txt_path, local_output_txt_path, "원격 수정된 파일이 로컬에"
+)
+check_inclusion(
+    local_output_txt_path, remote_output_txt_path, "로컬 파일이 원격 전체 파일에"
+)
