@@ -1,5 +1,6 @@
 import os
 import subprocess
+import time
 
 import pandas as pd
 
@@ -103,3 +104,14 @@ def process_ms_patch_list(excel_file):
                 print(f"{patch} 처리 중 오류 발생: {e}")
     except Exception as e:
         print(f"ms_patch_list 처리 중 오류 발생: {e}")
+
+
+if __name__ == "__main__":
+    print("sw_patch_list 처리 중")
+    process_sw_patch_list(sw_patch_list)
+
+    print("sw_patch_list 처리 후 대기 중")
+    time.sleep(180)
+
+    print("ms_patch_list 처리 중")
+    process_ms_patch_list(ms_patch_list)
