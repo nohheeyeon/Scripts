@@ -360,7 +360,7 @@ def update_office_patch_section(docx_path, base_path):
     document.save(docx_path)
 
 
-def update_software_patch_in_docx(docx_path, sw_excel_path):
+def update_software_patch_in_docx(docx_path, sw_excel_path, base_path):
     document = Document(docx_path)
     df = pd.read_excel(sw_excel_path)
     patch_version_map = dict(zip(df["패치명"], df["버전"]))
@@ -370,6 +370,35 @@ def update_software_patch_in_docx(docx_path, sw_excel_path):
     bandizip_version = patch_version_map.get("BandiZip", "버전 정보 없음")
     chrome_version = patch_version_map.get("Chrome", "버전 정보 없음")
 
+    unique_subfolder = get_unique_subfolder(base_path)
+    standalone_path = os.path.join(
+        base_path, unique_subfolder, "pms_patch", "standalone"
+    )
+
+    software_files = {}
+    for software in software_list:
+        software_folder = os.path.join(standalone_path, software)
+        if os.path.exists(software_folder):
+            x86_files = []
+            x64_files = []
+            for root, dirs, files in os.walk(software_folder):
+                for file in files:
+                    if "x64" in file.lower() or "64" in file:
+                        x64_files.append(file)
+                    elif "x86" in file.lower() or "32" in file:
+                        x86_files.append(file)
+                    else:
+                        x86_files.append(file)
+            software_files[software] = {"x86": x86_files, "x64": x64_files}
+        else:
+            print(f"\n[{software}] 폴더가 존재하지 않습니다.")
+            software_files[software] = {"x86": [], "x64": []}
+
+    def format_files(files):
+        return (
+            "\n".join([f"    {file}" for file in files]) if files else "    파일 없음"
+        )
+
     software_patch_text = (
         f"Acrobat Reader DC ({adobe_version}), BandiZip ({bandizip_version}), Chrome ({chrome_version}) 32/64 Bit\n"
         "설치 후 독립 설치용 일반 SW 패치 파일 검증\n\n"
@@ -377,22 +406,28 @@ def update_software_patch_in_docx(docx_path, sw_excel_path):
         f"A. Adobe Acrobat Reader ({adobe_version})\n"
         "1) Adobe Acrobat Reader 32 Bit 설치\n"
         " ① Adobe Acrobat Reader 폴더 선택\n"
-        " ② 실행\n\n"
+        " ② 실행\n"
+        f"{format_files(software_files.get('Adobe Acrobat Reader').get('x86'))}\n\n"
         f"B. BandiZip ({bandizip_version})\n"
         "1) BandiZip 32 Bit 설치\n"
         " ① BandiZip 폴더 선택\n"
         " ② 실행\n"
+        f"{format_files(software_files.get('BandiZip').get('x86'))}\n"
         "2) BandiZip 64 Bit 설치\n"
         " ① BandiZip 폴더 선택\n"
-        " ② 실행\n\n"
+        " ② 실행\n"
+        f"{format_files(software_files.get('BandiZip').get('x64'))}\n\n"
         f"C. Chrome ({chrome_version})\n"
         "1) Chrome 32 Bit 설치\n"
         " ① Chrome 폴더 선택\n"
         " ② 실행\n"
+        f"{format_files(software_files.get('Chrome').get('x86'))}\n"
         "2) Chrome 64 Bit 설치\n"
         " ① Chrome 폴더 선택\n"
-        " ② 실행"
+        " ② 실행\n"
+        f"{format_files(software_files.get('Chrome').get('x64'))}"
     )
+
     for table in document.tables:
         for row_index, row in enumerate(table.rows):
             for cell_index, cell in enumerate(row.cells):
@@ -401,6 +436,7 @@ def update_software_patch_in_docx(docx_path, sw_excel_path):
                         target_cell = table.rows[row_index + 1].cells[cell_index]
                         target_cell.text = software_patch_text
                         break
+
     set_font_size(document, 10)
     document.save(docx_path)
 
@@ -422,4 +458,4 @@ previous_output = list_files_in_v1(v1_folder_path, excel_file)
 update_docx_with_content(docx_file_path, previous_output, new_docx_file_path, month)
 update_office_patch_section(new_docx_file_path, data_dir)
 sw_excel_file = os.path.join(data_dir, "sw_patch_list.xlsx")
-update_software_patch_in_docx(new_docx_file_path, sw_excel_file)
+update_software_patch_in_docx(new_docx_file_path, sw_excel_file, data_dir)
