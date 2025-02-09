@@ -278,10 +278,61 @@ def update_docx_with_content(source_file_path, content_to_add, new_file_path, mo
         print(f"오류 발생: {e}")
 
 
+def get_numeric_folders(base_path):
+    unique_subfolder = get_unique_subfolder(base_path)
+
+    standalone_path = os.path.join(
+        base_path, unique_subfolder, "pms_patch", "standalone"
+    )
+
+    if not os.path.exists(standalone_path):
+        raise FileNotFoundError(
+            f"'standalone' 폴더를 찾을 수 없습니다: {standalone_path}"
+        )
+
+    numeric_folders = [
+        f
+        for f in os.listdir(standalone_path)
+        if os.path.isdir(os.path.join(standalone_path, f)) and f.isdigit()
+    ]
+
+    numeric_folders.sort()
+    return numeric_folders
+
+
+def update_office_patch_section(docx_path, base_path):
+    document = Document(docx_path)
+    numeric_folders = get_numeric_folders(base_path)
+
+    office_patch_text = (
+        "오피스 2013, 2016 32/64 Bit 설치 후 독립 설치용 오피스 패치 파일 검증\n"
+        "* 패치 파일 실행 시, C:\\Users\\사용자명\\AppData\\Local\\Temp\\package 경로에 압축 해제 후 패치 설치 시도\n\n"
+        "▣ 확인 사항\n"
+        "A. 오피스 2016 32 Bit\n"
+    )
+
+    for idx, folder in enumerate(numeric_folders, 1):
+        office_patch_text += f"{idx}) {folder}\n ① 폴더 선택\n ② 실행\n"
+
+    office_patch_text += "\nB. 오피스 2016 64 Bit\n"
+    for idx, folder in enumerate(numeric_folders, 1):
+        office_patch_text += f"{idx}) {folder}\n ① 폴더 선택\n ② 실행\n"
+
+    for table in document.tables:
+        for row_index, row in enumerate(table.rows):
+            for cell_index, cell in enumerate(row.cells):
+                if "독립 설치용 오피스 패치 검증" in cell.text:
+                    if row_index + 1 < len(table.rows):
+                        target_cell = table.rows[row_index + 1].cells[cell_index]
+                        target_cell.text = office_patch_text
+                        break
+    set_font_size(document, 10)
+    document.save(docx_path)
+
+
 data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 folder_name = get_unique_subfolder(data_dir)
 v1_folder_path = find_v1_folder(os.path.join(data_dir, folder_name))
-print(f"v1 폴더 경로: {v1_folder_path}")
 excel_file = os.path.join(data_dir, "ms_patch_list.xlsx")
 docx_file_path = os.path.join(data_dir, "증분 패치 검증 QA 결과서.docx")
 
@@ -294,3 +345,4 @@ new_docx_file_path = os.path.join(
 
 previous_output = list_files_in_v1(v1_folder_path, excel_file)
 update_docx_with_content(docx_file_path, previous_output, new_docx_file_path, month)
+update_office_patch_section(new_docx_file_path, data_dir)
