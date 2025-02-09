@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import time
+from datetime import datetime
 from enum import Enum
 
 import pandas as pd
@@ -16,8 +17,15 @@ import pandas as pd
 #   - MS 패치 : "제어판\프로그램\프로그램 및 기능\설치된 업데이트"에서 KB ID가 설치되었는지 확인
 #                   또한 "C:\Users\사용자이름\AppData\Local\Temp\package" 위치에 해당 ID 값의 폴더가 생성되었는지 확인
 
+
+module_name = os.path.splitext(os.path.basename(__file__))[0]
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+log_dir = os.path.join(os.path.dirname(__file__), "logs")
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, f"{module_name}_{timestamp}.log")
+
 logging.basicConfig(
-    filename="standalone_patch_auto_install.log",
+    filename=log_file,
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
