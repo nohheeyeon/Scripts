@@ -83,16 +83,17 @@ def update_docx_with_content(source_file_path, content_to_add, new_file_path):
     document = Document(source_file_path)
 
     try:
+        target_numbers = {"4", "6", "7", "8"}
         table = document.tables[1]
-        target_cell = table.rows[4].cells[1]
-
-        if "확인 사항" in target_cell.text:
-            target_cell.text += f"\n{content_to_add}"
+        for row in table.rows:
+            if row.cells[0].text.strip() in target_numbers:
+                for cell in row.cells:
+                    if "확인 사항" in cell.text:
+                        if content_to_add not in cell.text:
+                            cell.text += f"\n{content_to_add}"
 
         document.save(new_file_path)
         print(f"파일이 성공적으로 생성되었습니다: {new_file_path}")
-    except IndexError:
-        print("표 또는 셀을 찾을 수 없습니다.")
     except Exception as e:
         print(f"오류 발생: {e}")
 
