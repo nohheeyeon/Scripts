@@ -40,7 +40,7 @@ class ManualPatchsetIntegrityVerifier:
         )
         os.makedirs(self.current_date_folder, exist_ok=True)
 
-        self.BASE_DIRECTORY = f"C:/ftp_root/manual_patch/{self.year}/{self.month}/ms"
+        self.MS_DIRECTORY = f"C:/ftp_root/manual_patch/{self.year}/{self.month}/ms"
         self.SW_DIRECTORY = f"C:/ftp_root/manual_patch/{self.year}/{self.month}/sw"
 
         self.local_output_txt_path = os.path.join(
@@ -206,7 +206,7 @@ class ManualPatchsetIntegrityVerifier:
             self.log(f".ayt 파일이 없는 파일: {self.no_ayt_files}")
 
     def run(self):
-        self.process_top_level_zips(self.BASE_DIRECTORY)
+        self.process_top_level_zips(self.MS_DIRECTORY)
         self.process_top_level_zips(self.SW_DIRECTORY)
         self.write_file_list(self.all_file_names, self.local_output_txt_path)
         self.log("로컬 파일 목록 작성 완료")
