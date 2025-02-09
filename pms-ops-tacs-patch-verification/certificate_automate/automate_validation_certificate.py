@@ -79,12 +79,21 @@ def list_files_in_v1(folder_name, excel_file):
     return "\n\n".join(result)
 
 
-def update_docx_with_content(source_file_path, content_to_add, new_file_path):
+def update_docx_with_content(source_file_path, content_to_add, new_file_path, month):
     document = Document(source_file_path)
 
     try:
-        target_numbers = {"4", "6", "7", "8"}
         table = document.tables[1]
+        for row in table.rows:
+            for cell in row.cells:
+                if "월 증분 패치" in cell.text and not cell.text.startswith(
+                    f"{month}월"
+                ):
+                    cell.text = cell.text.replace(
+                        "월 증분 패치", f"{month}월 증분 패치"
+                    )
+
+        target_numbers = {"4", "6", "7", "8"}
         for row in table.rows:
             if row.cells[0].text.strip() in target_numbers:
                 for cell in row.cells:
@@ -117,4 +126,4 @@ new_docx_file_path = os.path.join(
 
 previous_output = list_files_in_v1(folder_name, excel_file)
 
-update_docx_with_content(docx_file_path, previous_output, new_docx_file_path)
+update_docx_with_content(docx_file_path, previous_output, new_docx_file_path, month)
