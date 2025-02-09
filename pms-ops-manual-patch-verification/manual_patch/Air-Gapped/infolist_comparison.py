@@ -18,14 +18,21 @@ if month == 1:
 else:
     month -= 1
 
+desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+current_date_folder = os.path.join(
+    desktop_path, datetime.datetime.now().strftime("%Y-%m-%d")
+)
+os.makedirs(current_date_folder, exist_ok=True)
+
 BASE_DIRECTORY = f"C:/ftp_root/manual/ms/{year}/{month}"
 SW_DIRECTORY = f"C:/ftp_root/manual/sw/{year}/{month}"
-local_output_txt_path = os.path.join(BASE_DIRECTORY, "local_file_list.txt")
-remote_output_txt_path = os.path.join(BASE_DIRECTORY, "remote_file_list.txt")
+
+local_output_txt_path = os.path.join(current_date_folder, "local_file_list.txt")
+remote_output_txt_path = os.path.join(current_date_folder, "remote_file_list.txt")
 remote_modified_output_txt_path = os.path.join(
-    BASE_DIRECTORY, "remote_modified_file_list.txt"
+    current_date_folder, "remote_modified_file_list.txt"
 )
-log_file_path = os.path.join(BASE_DIRECTORY, "log.txt")
+log_file_path = os.path.join(current_date_folder, "log.txt")
 
 with open(log_file_path, "w", encoding="utf-8") as log_file:
     log_file.write("로그 파일 시작\n")
