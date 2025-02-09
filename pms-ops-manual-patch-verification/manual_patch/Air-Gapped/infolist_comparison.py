@@ -1,3 +1,4 @@
+import calendar
 import datetime
 import os
 import sys
@@ -104,23 +105,38 @@ def fetch_remote_files(ssh_server, port, username, password, remote_dir):
         stdin, stdout, stderr = ssh.exec_command(
             f"find {remote_dir} -type f -o -type d"
         )
+        all_files_raw = stdout.read().decode("utf-8").strip()
         all_files = set(
             line.strip().replace(f"{remote_dir}/", "")
-            for line in stdout.read().decode("utf-8").splitlines()
+            for line in all_files_raw.splitlines()
         )
-
-        log("원격 서버의 v1 하위 경로부터 모든 파일 경로 목록 추출 완료")
 
         month_filter = now.strftime("%Y-%m")
-        stdin, stdout, stderr = ssh.exec_command(
-            f"find {remote_dir} -type f -newermt {month_filter}-01 ! -newermt {month_filter}-31"
-        )
+        last_day = calendar.monthrange(now.year, now.month)[1]
+        command = f"find {remote_dir} -type f -newermt {month_filter}-01 ! -newermt {month_filter}-{last_day}T23:59:59"
+        stdin, stdout, stderr = ssh.exec_command(command)
+
+        result = stdout.read().decode("utf-8").strip()
+        error = stderr.read().decode("utf-8").strip()
+
+        if error:
+            log(f"명령 에러: {error}")
+
         modified_files = set(
             line.strip().replace(f"{remote_dir}/", "")
-            for line in stdout.read().decode("utf-8").splitlines()
+            for line in result.splitlines()
+            if not line.strip().endswith(".json")
         )
 
-        log("원격 서버에서 이번 달에 수정된 파일 목록 추출 완료")
+        with open(
+            remote_modified_output_txt_path, "w", encoding="utf-8"
+        ) as output_file:
+            if not modified_files:
+                log("수정된 파일이 없습니다. 빈 파일을 생성합니다.")
+            for file in sorted(modified_files):
+                output_file.write(file + "\n")
+        log(f"수정된 파일 목록이 {remote_modified_output_txt_path}에 저장되었습니다.")
+
         return all_files, modified_files
     except Exception as e:
         exit_with_error(f"원격 서버에서 파일/폴더 목록을 가져오는 데 실패: {str(e)}")
@@ -135,10 +151,8 @@ PASSWORD = "PASSWORD"
 REMOTE_DIRECTORY = "REMOTE_DIRECTORY"
 
 all_file_names = set()
-log("MS 디렉토리의 patches.zip 파일 하위 파일 목록 작성 중")
 process_top_level_zips(BASE_DIRECTORY)
 
-log("SW 디렉토리의 patches.zip 파일 하위 파일 목록 작성 중")
 process_top_level_zips(SW_DIRECTORY)
 
 with open(local_output_txt_path, "w", encoding="utf-8") as output_file:
@@ -149,15 +163,11 @@ log("로컬 파일 목록 작성 완료")
 remote_files, modified_files = fetch_remote_files(
     SSH_SERVER, PORT, USERNAME, PASSWORD, REMOTE_DIRECTORY
 )
+
 with open(remote_output_txt_path, "w", encoding="utf-8") as output_file:
     for file in sorted(remote_files):
         output_file.write(file + "\n")
 log("원격 서버의 v1 하위 경로부터 전체 파일 목록 작성 완료")
-
-with open(remote_modified_output_txt_path, "w", encoding="utf-8") as output_file:
-    for file in sorted(modified_files):
-        output_file.write(file + "\n")
-log("이번 달에 수정된 원격 서버 파일 목록 작성 완료")
 
 
 def normalize_path(file_path, is_windows=True):
@@ -337,3 +347,18 @@ def check_office_patch_inclusion(file_list_path):
 
 
 check_office_patch_inclusion(local_output_txt_path)
+
+no_ayt_files = []
+log("동일한 이름의 .ayt 파일이 존재하지 않는 파일:")
+
+for file in all_file_names:
+    if file.startswith("ms_files/") and file.endswith((".cab", ".exe")):
+        ayt_file = f"{file}.ayt"
+        if ayt_file not in all_file_names:
+            print(file)
+            no_ayt_files.append(file)
+
+if not no_ayt_files:
+    log("모든 파일에 대해 동일한 이름의 .ayt 파일이 존재합니다.")
+else:
+    log("동일한 이름의 .ayt 파일이 존재하지 않는 파일 목록 작성 완료")
