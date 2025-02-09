@@ -47,28 +47,15 @@ def exit_with_error(message):
 
 def process_zip(zip_file, parent_path=""):
     for file_info in zip_file.infolist():
-        current_path = (
-            os.path.normpath(f"{parent_path}/{file_info.filename}")
-            if parent_path
-            else file_info.filename
-        )
+        relative_path = file_info.filename.replace("\\", "/").rstrip("/")
+        all_file_names.add(relative_path)
+        log(f"Zip 내부 파일 발견: {relative_path}")
 
-        if "patches.zip" in current_path:
-            relative_path = current_path.split("patches.zip", 1)[1].lstrip("\\/")
-            all_file_names.add(relative_path)
-            log(f"파일 발견: {relative_path}")
-        else:
-            all_file_names.add(current_path)
-            log(f"파일 발견: {current_path}")
-
-        if file_info.filename.endswith(".zip") and "patches.zip" not in current_path:
-            log(f"Zip 파일 이름만 기록: {current_path}")
-            continue
-        elif file_info.filename.endswith(".zip"):
-            log(f"내부 patches.zip 파일 처리 중: {current_path}")
+        if file_info.filename.endswith(".zip"):
+            log(f"내부 zip 파일 처리 중: {relative_path}")
             with zip_file.open(file_info) as inner_file:
                 with zipfile.ZipFile(BytesIO(inner_file.read())) as nested_zip:
-                    process_zip(nested_zip, parent_path=current_path)
+                    process_zip(nested_zip, parent_path=relative_path)
 
 
 def process_top_level_zips(directory_path):
@@ -122,7 +109,19 @@ USERNAME = "USERNAME"
 PASSWORD = "PASSWORD"
 REMOTE_DIRECTORY = "REMOTE_DIRECTORY"
 
-remote_files = fetch_remote_files(
+all_file_names = set()
+log("MS 디렉토리의 patches.zip 파일 하위 파일 목록 작성 중")
+process_top_level_zips(BASE_DIRECTORY)
+
+log("SW 디렉토리의 patches.zip 파일 하위 파일 목록 작성 중")
+process_top_level_zips(SW_DIRECTORY)
+
+with open(local_output_txt_path, "w", encoding="utf-8") as output_file:
+    for file_name in sorted(all_file_names):
+        output_file.write(file_name + "\n")
+log("로컬 파일 목록 작성 완료")
+
+remote_files, modified_files = fetch_remote_files(
     SSH_SERVER, PORT, USERNAME, PASSWORD, REMOTE_DIRECTORY
 )
 log(f"중복 제거된 원격 서버 파일 목록 저장 중: {remote_output_txt_path}")
