@@ -107,11 +107,9 @@ def list_files_in_v1(v1_folder_path, ms_excel_file):
 def get_kb_ids_grouped(ms_excel_file):
     df = pd.read_excel(ms_excel_file)
 
-    # 중복 제거 추가
     kb_21h2 = df[df["제목"].str.contains("21H2", na=False)]["KB ID"].dropna().unique()
     kb_22h2 = df[df["제목"].str.contains("22H2", na=False)]["KB ID"].dropna().unique()
 
-    # KB 접두어 추가 + 중복 제거
     kb_21h2 = sorted(set(f"KB{str(kb_id)}" for kb_id in kb_21h2))
     kb_22h2 = sorted(set(f"KB{str(kb_id)}" for kb_id in kb_22h2))
 
@@ -145,6 +143,23 @@ def get_software_versions(ms_excel_file, software_names):
     return versions
 
 
+def get_edge_version(excel_file):
+    df = pd.read_excel(excel_file)
+
+    edge_versions = (
+        df[df["제목"].str.contains("Edge", na=False)]["제목"].dropna().tolist()
+    )
+
+    version_pattern = r"빌드\s*([\d\.]+)"
+
+    for title in edge_versions:
+        match = re.search(version_pattern, title)
+        if match:
+            return match.group(1)
+
+    return "버전 정보 없음"
+
+
 def set_font_size(document, size):
     for paragraph in document.paragraphs:
         for run in paragraph.runs:
@@ -169,6 +184,7 @@ def update_docx_with_content(source_file_path, content_to_add, new_file_path, mo
         count_22h2 = count_22h2_titles(ms_excel_file)
         kb_ids_21h2, kb_ids_22h2 = get_kb_ids_grouped(ms_excel_file)
         office_count, office_kb_ids = get_office_kb_ids(ms_excel_file)
+        edge_version = get_edge_version(ms_excel_file)
 
         software_list = ["Adobe Acrobat Reader", "BandiZip", "Chrome"]
         software_versions = get_software_versions(sw_excel_file, software_list)
@@ -219,6 +235,18 @@ def update_docx_with_content(source_file_path, content_to_add, new_file_path, mo
                                     + "\n"
                                     + "\n".join(cell.text.split("확인 사항")[1:])
                                 )
+
+            for row in table.rows:
+                if row.cells[0].text.strip() == "10":
+                    for cell in row.cells:
+                        if "Edge 브라우저 업데이트 확인" in cell.text:
+                            updated_text = re.sub(
+                                r"Edge 브라우저 업데이트 확인\(\)",
+                                f"Edge 브라우저 업데이트 확인({edge_version})",
+                                cell.text,
+                            )
+                            cell.text = updated_text
+
         set_font_size(document, 10)
         document.save(new_file_path)
         print(f"파일이 성공적으로 생성되었습니다: {new_file_path}")
