@@ -79,3 +79,38 @@ with open(local_output_txt_path, "w", encoding="utf-8") as output_file:
     for file_name in all_file_names:
         output_file.write(file_name + "\n")
 log("로컬 파일 목록 작성 완료")
+
+
+def fetch_remote_files(ssh_server, port, username, password, remote_dir):
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(ssh_server, port=port, username=username, password=password)
+
+        stdin, stdout, stderr = ssh.exec_command(
+            f"find {remote_dir} -type f -o -type d"
+        )
+        remote_files = stdout.read().decode("utf-8").splitlines()
+
+        log("원격 서버의 파일/폴더 목록 추출 완료")
+        return [file.replace(f"{remote_dir}/", "") for file in remote_files]
+    except Exception as e:
+        exit_with_error(f"원격 서버에서 파일/폴더 목록을 가져오는 데 실패: {str(e)}")
+    finally:
+        ssh.close()
+
+
+SSH_SERVER = ""
+PORT = 6879
+USERNAME = ""
+PASSWORD = "PASSWORD"
+REMOTE_DIRECTORY = ""
+
+remote_files = fetch_remote_files(
+    SSH_SERVER, PORT, USERNAME, PASSWORD, REMOTE_DIRECTORY
+)
+log(f"원격 서버 파일 목록 저장 중: {remote_output_txt_path}")
+with open(remote_output_txt_path, "w", encoding="utf-8") as output_file:
+    for file in remote_files:
+        output_file.write(file + "\n")
+log("원격 서버 파일 목록 작성 완료")
