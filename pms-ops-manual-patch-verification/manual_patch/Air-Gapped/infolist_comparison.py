@@ -45,17 +45,23 @@ def exit_with_error(message):
     exit(1)
 
 
-def process_zip(zip_file, parent_path=""):
+def process_zip(zip_file, parent_path="", level=0):
     for file_info in zip_file.infolist():
         relative_path = file_info.filename.replace("\\", "/").rstrip("/")
         all_file_names.add(relative_path)
         log(f"Zip 내부 파일 발견: {relative_path}")
 
         if file_info.filename.endswith(".zip"):
-            log(f"내부 zip 파일 처리 중: {relative_path}")
+            if level >= 1:
+                log(f"{relative_path}")
+                continue
+
+            log(f"patches.zip 파일 처리 중: {relative_path}")
             with zip_file.open(file_info) as inner_file:
                 with zipfile.ZipFile(BytesIO(inner_file.read())) as nested_zip:
-                    process_zip(nested_zip, parent_path=relative_path)
+                    process_zip(nested_zip, parent_path=relative_path, level=1)
+        else:
+            log(f"파일 추가: {relative_path}")
 
 
 def process_top_level_zips(directory_path):
@@ -65,7 +71,7 @@ def process_top_level_zips(directory_path):
             log(f"최상위 Zip 파일 처리 중: {zip_path}")
             try:
                 with zipfile.ZipFile(zip_path, "r") as zip_file:
-                    process_zip(zip_file, parent_path="")
+                    process_zip(zip_file, parent_path="", level=0)
             except zipfile.BadZipFile:
                 log(f"잘못된 Zip 파일: {zip_path} - zip 형식이 아님")
 
