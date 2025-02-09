@@ -1,5 +1,6 @@
 import calendar
 import datetime
+import json
 import os
 import sys
 import zipfile
@@ -52,6 +53,10 @@ class ManualPatchsetIntegrityVerifier:
             self.current_date_folder, "remote_modified_file_list.txt"
         )
         self.log_file_path = os.path.join(self.current_date_folder, "log.txt")
+
+        self.patterns_json_path = os.path.join(
+            desktop_path, "check_office_patch_inclusion.json"
+        )
 
         with open(self.log_file_path, "w", encoding="utf-8") as log_file:
             log_file.write("로그 파일 시작\n")
@@ -132,12 +137,26 @@ class ManualPatchsetIntegrityVerifier:
             for file in sorted(file_list):
                 output_file.write(file + "\n")
 
-    def check_inclusion(self, reference_file, target_file, description):
+    def check_inclusion(
+        self, reference_file, target_file, description, exclude_ext=None
+    ):
         with open(reference_file, "r", encoding="utf-8") as ref_file:
             reference_list = set(line.strip() for line in ref_file)
 
         with open(target_file, "r", encoding="utf-8") as tgt_file:
             target_list = set(line.strip() for line in tgt_file)
+
+        if exclude_ext:
+            reference_list = {
+                f
+                for f in reference_list
+                if not any(f.endswith(ext) for ext in exclude_ext)
+            }
+            target_list = {
+                f
+                for f in target_list
+                if not any(f.endswith(ext) for ext in exclude_ext)
+            }
 
         not_included = reference_list - target_list
         if not_included:
@@ -148,143 +167,28 @@ class ManualPatchsetIntegrityVerifier:
             self.log(f"{description} 모든 파일이 포함되어 있습니다.")
 
     def check_office_patch_inclusion(self):
-        patterns = {  # Windows 11
-            "11v24H2-x64": "Windows 11 버전 24H2 (X64)",
-            "11v23H2-x64": "Windows 11 버전 23H2 (X64)",
-            "11v22H2-x64": "Windows 11 버전 22H2 (x64)",
-            "11v21H2-x64": "Windows 11 버전 21H2 (x64)",
-            # Windows 10
-            "10v22H2-x64": "Windows 10 버전 22H2 (x64)",
-            "10v22H2-x86": "Windows 10 버전 22H2 (x86)",
-            "10v21H2-x64": "Windows 10 버전 21H2 (x64)",
-            "10v21H2-x86": "Windows 10 버전 21H2 (x86)",
-            "10v21H1-x64": "Windows 10 버전 21H1 (x64)",
-            "10v21H1-x86": "Windows 10 버전 21H1 (x86)",
-            "10v20H2-x64": "Windows 10 버전 20H2 (x64)",
-            "10v20H2-x86": "Windows 10 버전 20H2 (x86)",
-            "10v2004-x64": "Windows 10 버전 2004 (x64)",
-            "10v2004-x86": "Windows 10 버전 2004 (x86)",
-            "10v1909ent-x64": "Windows 10 버전 1909 Enterprise (x64)",
-            "10v1909ent-x86": "Windows 10 버전 1909 Enterprise (x86)",
-            "10v1909-x64": "Windows 10 버전 1909 (x64)",
-            "10v1909-x86": "Windows 10 버전 1909 (x86)",
-            "10v1903v2-x64": "Windows 10 버전 1903 v2 (x64)",
-            "10v1903v2-x86": "Windows 10 버전 1903 v2 (x86)",
-            "10v1903-x64": "Windows 10 버전 1903 (x64)",
-            "10v1903-x86": "Windows 10 버전 1903 (x86)",
-            "10v1809ltsc-x64": "Windows 10 버전 1809 LTSC (x64)",
-            "10v1809ltsc-x86": "Windows 10 버전 1809 LTSC (x86)",
-            "10v1809ent-x64": "Windows 10 버전 1809 ENT (X64)",
-            "10v1809ent-x86": "Windows 10 버전 1809 ENT (X86)",
-            "10v1809-x64": "Windows 10 버전 1809 (x64)",
-            "10v1809-x86": "Windows 10 버전 1809 (x86)",
-            "10v1803gdrdu-x64": "Windows 10 버전 1809 GDRDU (X64)",
-            "10v1803gdrdu-x86": "Windows 10 버전 1809 GDRDU (X86)",
-            "10v1803-x64": "Windows 10 버전 1803 (x64)",
-            "10v1803-x86": "Windows 10 버전 1803 (x86)",
-            "10v1709-x64": "Windows 10 버전 1709 (x64)",
-            "10v1709-x86": "Windows 10 버전 1709 (x86)",
-            "10v1703-x64": "Windows 10 버전 1703 (x64)",
-            "10v1703-x86": "Windows 10 버전 1703 (x86)",
-            "10v1607-x64": "Windows 10 버전 1607 (x64)",
-            "10v1607-x86": "Windows 10 버전 1607 (x86)",
-            "10v1511-x64": "Windows 10 버전 1511 (x64)",
-            "10v1511-x86": "Windows 10 버전 1511 (x86)",
-            "10v1507-x64": "Windows 10 버전 1507 (x64)",
-            "10v1507-x86": "Windows 10 버전 1507 (x86)",
-            # Windows 8, 7
-            "8.1-x64": "Windows 8.1 (x64)",
-            "8.1-x86": "Windows 8.1 (x86)",
-            "8-x64": "Windows 8 (x64)",
-            "8-x86": "Windows 8 (x86)",
-            "7sp1-x64": "Windows 7 SP1 (x64)",
-            "7sp1-x86": "Windows 7 SP1 (x86)",
-            "7rtm-x64": "Windows 7 RTM (x64)",
-            "7rtm-x86": "Windows 7 RTM (x86)",
-            # Windows Upgrade 10 -> 10 비즈니스에디션
-            "10edunvl-x86": "Windows 10 EDUNVL (X86)",
-            "10eduvl-x86": "Windows 10 EDUVL (X86)",
-            "10provl-x86": "Windows 10 PROVL (X86)",
-            "10pronvl-x86": "Windows 10 PRONVL (X86)",
-            "10ent-x86": "Windows 10 ENT (X86)",
-            "10entn-x86": "Windows 10 ENTN (X86)",
-            "10edunvl-x64": "Windows 10 EDUNVL (x64)",
-            "10eduvl-x64": "Windows 10 EDUVL (X64)",
-            "10provl-x64": "Windows 10 PROVL (X64)",
-            "10pronvl-x64": "Windows 10 PRONVL (X64)",
-            "10ent-x64": "Windows 10 ENT (X64)",
-            "10entn-x64": "Windows 10 ENTN (X64)",
-            # Windows Upgrade 10 -> 소비자에디션
-            "10cloud-x86": "Windows 10 CLOUD (X86)",
-            "10cloudn-x86": "Windows 10 CLOUDN (X86)",
-            "10core-x86": "Windows 10 CORE (X86)",
-            "10coren-x86": "Windows 10 COREN (X86)",
-            "10edunonvl-x86": "Windows 10 EDUNONVL (X86)",
-            "10edunonvln-x86": "Windows 10 EDUNOWNVLN (X86)",
-            "10prononvl-x86": "Windows 10 PRONONVL (X86)",
-            "10prononvln-x86": "Windows 10 PRONONVLN (X86)",
-            "10cloud-x64": "Windows 10 CLOUD (X64)",
-            "10cloudn-x64": "Windows 10 CLOUDN (X64)",
-            "10core-x64": "Windows 10 CORE (X64)",
-            "10coren-x64": "Windows 10 COREN (X64)",
-            "10edunonvl-x64": "Windows 10 EDUNONVL (X64)",
-            "10edunonvln-x64": "Windows 10 EDUNONVLN (X64)",
-            "10prononvl-x64": "Windows 10 PRONONVL (X64)",
-            "10prononvln-x64": "Windows 10 PRONONVLN (X64)",
-            # Windows Upgrade 7, 8.1 -> 10
-            "7-x86": "Windows 7 (x86)",
-            "7-x64": "Windows 7 (x64)",
-            "8.1-x86": "Windows 8.1 (x86)",
-            "8.1-x64": "Windows 8.1 (x64)",
-            # Windows Server
-            "2022-all": "Windows Server 2022",
-            "2019-all": "Windows Server 2019",
-            "2016-all": "Windows Server 2016",
-            "2012r2-all": "Windows Server 2012 R2",
-            "2012-all": "Windows Server 2012",
-            "2008r2sp1-all": "Windows Server 2008 R2 SP1",
-            "2008r2rtm-all": "Windows Server 2008 R2 RTM",
-            "2008sp2-x64": "Windows Server 2008 SP2 (x64)",
-            "2008sp2-x86": "Windows Server 2008 SP2 (x86)",
-            "2008rtm-x64": "Windows Server 2008 RTM (X64)",
-            "2008rtm-x86": "Windows Server 2008 RTM (X86)",
-            "2003sp2-x64": "Windows Server 2003 SP2 (x64)",
-            "2003sp2-x86": "Windows Server 2003 SP2 (x86)",
-            "2003sp1-x64": "Windows Server 2003 SP1 (X64)",
-            "2003sp1-x86": "Windows Server 2003 SP1 (X86)",
-            "2003rtm-x64": "Windows Server 2003 RTM (x64)",
-            "2003rtm-x86": "Windows Server 2003 RTM (x86)",
-            # Windows Embedded
-            "w8embed-x64": "Windows Embedded 8 (x64)",
-            "w8embed-x86": "Windows Embedded 8 (x86)",
-            "w7sp1embed-x64": "Windows Embedded 7 SP1 (x64)",
-            "w7sp1embed-x86": "Windows Embedded 7 SP1 (x86)",
-            "w7rtmembed-x64": "Windows Embedded 7 RTM (X64)",
-            "w7rtmembed-x86": "Windows Embedded 7 RTM (X86)",
-            # "xp3embed-x64": "Windows Embedded XP SP3 (x64)", 지원 종류 범위에 따라 빌드 설정에서 제외
-            "xp3embed-x86": "Windows Embedded XP SP3 (x86)",
-            # Office
-            "2019-all": "Office 2019 패치셋에 포함",
-            "2016-all": "Office 2016 패치셋에 포함",
-            "2013-all": "Office 2013 패치셋에 포함",
-            "2010-all": "Office 2010 패치셋에 포함",
-            "2007-all": "Office 2007 패치셋에 포함",
-            "2003-all": "Office 2003 패치셋에 포함",
-            # Microsoft Edge
-            "Edge-x64": "Microsoft Edge (x64)",
-            "Edge-x86": "Microsoft Edge (x86)",
-        }
+
+        try:
+            with open(self.patterns_json_path, "r", encoding="utf-8") as json_file:
+                patterns = json.load(json_file)
+        except Exception as e:
+            self.log(f"JSON 파일을 불러오는 중 오류 발생: {e}")
+            return
 
         missing_patterns = set(patterns.keys())
+        found_patterns = set()
 
         with open(self.local_output_txt_path, "r", encoding="utf-8") as file:
             for line in file:
+                stripped_line = line.strip().lower()
                 for pattern in patterns:
-                    if pattern in line:
-                        missing_patterns.discard(pattern)
+                    if pattern.lower() in stripped_line:
+                        found_patterns.add(pattern)
+
+        missing_patterns -= found_patterns
 
         if missing_patterns:
-            for pattern in missing_patterns:
+            for pattern in sorted(missing_patterns):
                 self.log(f"{pattern} 패치셋이 누락되었습니다.")
         else:
             self.log("모든 Office 패치셋이 포함되어 있습니다.")
