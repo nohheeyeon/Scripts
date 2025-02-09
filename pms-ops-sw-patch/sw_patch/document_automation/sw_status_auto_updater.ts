@@ -36,6 +36,7 @@ function main(workbook: ExcelScript.Workbook) {
   update_sw_sheet(sw_summary_sheet, validationData);
 }
 
+// 최신 검증서 시트에서 데이터 추출
 function extract_validation_data(sheet: ExcelScript.Worksheet): {
   productNames: string[], 
   releaseDates: string[], 
@@ -65,6 +66,7 @@ function extract_validation_data(sheet: ExcelScript.Worksheet): {
   };
 }
 
+// SW현황 시트 업데이트
 function update_sw_sheet(sheet: ExcelScript.Worksheet, validationData: {
   productNames: string[], 
   releaseDates: string[], 
@@ -105,6 +107,7 @@ function update_sw_sheet(sheet: ExcelScript.Worksheet, validationData: {
   console.log("복사 완료된 제품:", logMessages);
 }
 
+// 정규표현식을 사용하여 시트 찾기
 function find_sheet_by_regex(sheets: ExcelScript.Worksheet[], regex: RegExp): ExcelScript.Worksheet | null {
   for (let sheet of sheets) {
     if (regex.test(sheet.getName())) {
@@ -114,6 +117,7 @@ function find_sheet_by_regex(sheets: ExcelScript.Worksheet[], regex: RegExp): Ex
   return null;
 }
 
+// 정규표현식을 사용하여 셀 찾기
 function find_cell_with_regex(sheet: ExcelScript.Worksheet, regex: RegExp): { row: number, column: number } | null {
   let used_range = sheet.getUsedRange();
   let values = used_range.getValues();
@@ -129,6 +133,7 @@ function find_cell_with_regex(sheet: ExcelScript.Worksheet, regex: RegExp): { ro
   return null;
 }
 
+// 특정 셀의 데이터를 배열로 가져오기
 function get_column_data(sheet: ExcelScript.Worksheet, start_row: number, column: number): string[] {
   let column_data: string[] = [];
   let total_row_count = sheet.getUsedRange().getRowCount();
@@ -144,6 +149,7 @@ function get_column_data(sheet: ExcelScript.Worksheet, start_row: number, column
   return column_data;
 }
 
+// 두 배열에서 공통된 값 찾기
 function find_common_values(array1: string[], array2: string[]): string[] {
   let common_values: string[] = [];
 
