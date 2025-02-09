@@ -4,6 +4,7 @@ from datetime import datetime
 
 import pandas as pd
 from docx import Document
+from docx.shared import Pt
 
 
 def find_v1_folder(base_path):
@@ -93,6 +94,18 @@ def list_files_in_v1(v1_folder_path, excel_file):
     return "\n\n".join(result)
 
 
+def set_font_size(document, size):
+    for paragraph in document.paragraphs:
+        for run in paragraph.runs:
+            run.font.size = Pt(size)
+    for table in document.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    for run in paragraph.runs:
+                        run.font.size = Pt(size)
+
+
 def update_docx_with_content(source_file_path, content_to_add, new_file_path, month):
     document = Document(source_file_path)
     try:
@@ -126,6 +139,7 @@ def update_docx_with_content(source_file_path, content_to_add, new_file_path, mo
                                 + "\n"
                                 + "\n".join(cell.text.split("확인 사항")[1:])
                             )
+        set_font_size(document, 10)
         document.save(new_file_path)
         print(f"파일이 성공적으로 생성되었습니다: {new_file_path}")
     except Exception as e:
