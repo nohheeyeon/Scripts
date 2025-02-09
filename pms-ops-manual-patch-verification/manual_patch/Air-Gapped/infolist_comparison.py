@@ -180,7 +180,7 @@ def check_office_patch_inclusion(file_list_path):
     patterns = {
         # Windows 11
         "11v24H2-x64": "Windows 11 버전 24H2 (X64)",
-        "11v23H2-x64": "Windows 11 버전 24H2 (X64)",
+        "11v23H2-x64": "Windows 11 버전 23H2 (X64)",
         "11v22H2-x64": "Windows 11 버전 22H2 (x64)",
         "11v21H2-x64": "Windows 11 버전 21H2 (x64)",
         # Windows 10
