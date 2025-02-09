@@ -137,3 +137,12 @@ for file in all_file_names:
 
 if not no_ayt_files:
     log("모든 파일에 대해 동일한 이름의 .ayt 파일이 존재합니다.")
+
+if not no_ayt_files:
+    log("스크립트 실행 성공")
+    exit_code = 0
+else:
+    log("스크립트 실행 실패")
+    exit_code = 1
+
+exit(exit_code)
