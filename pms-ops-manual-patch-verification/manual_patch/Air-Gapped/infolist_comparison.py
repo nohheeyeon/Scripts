@@ -68,28 +68,16 @@ def process_zip(zip_file, parent_path=""):
                     process_zip(nested_zip, parent_path=current_path)
 
 
-def process_directory(directory_path):
-    for root, _, files in os.walk(directory_path):
-        for file in files:
-            if file.endswith(".zip"):
-                zip_path = os.path.join(root, file)
-                log(f"Zip 파일 처리 중: {zip_path}")
+def process_top_level_zips(directory_path):
+    for file_name in os.listdir(directory_path):
+        if file_name.endswith(".zip"):
+            zip_path = os.path.join(directory_path, file_name)
+            log(f"최상위 Zip 파일 처리 중: {zip_path}")
+            try:
                 with zipfile.ZipFile(zip_path, "r") as zip_file:
-                    process_zip(zip_file)
-
-
-all_file_names = set()
-log("MS 디렉토리 파일 및 patches.zip 내부 목록 작성 중")
-process_directory(BASE_DIRECTORY)
-
-log("SW 디렉토리 파일 및 patches.zip 내부 목록 작성 중")
-process_directory(SW_DIRECTORY)
-
-log(f"중복 제거된 로컬 파일 목록 저장 중: {local_output_txt_path}")
-with open(local_output_txt_path, "w", encoding="utf-8") as output_file:
-    for file_name in sorted(all_file_names):
-        output_file.write(file_name + "\n")
-log("중복 제거된 로컬 파일 목록 작성 완료")
+                    process_zip(zip_file, parent_path="")
+            except zipfile.BadZipFile:
+                log(f"잘못된 Zip 파일: {zip_path} - zip 형식이 아님")
 
 
 def fetch_remote_files(ssh_server, port, username, password, remote_dir):
