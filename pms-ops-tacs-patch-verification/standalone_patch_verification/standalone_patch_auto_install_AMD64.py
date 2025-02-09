@@ -59,49 +59,37 @@ class StandAlonePatchInstaller:
             print(f"관리자 실행 중 오류 발생: {e}")
             return False
 
+    def process_patch_list(self, excel_file, column_name, keyword, admin=False):
+        try:
+            df = pd.read_excel(excel_file, engine="openpyxl")
+            filtered_data = df[df[column_name].str.contains(keyword, na=False)]
+            patch_files = filtered_data["패치파일"].dropna().tolist()
 
-def process_sw_patch_list(excel_file):
-    try:
-        df = pd.read_excel(excel_file, engine="openpyxl")
-        filtered_data = df[df["비트"].str.contains("X86", na=False)]
-        patch_files = filtered_data["패치파일"].dropna().tolist()
+            for patch in patch_files:
+                try:
+                    patch_path = self.find_file_in_folder(self.patch_folder, patch)
+                    if patch_path:
+                        print(f"패치 파일 경로: {patch_path}")
+                        if admin:
+                            success = self.run_as_admin(patch_path)
+                        else:
+                            success = self.silent_install_patch(patch_path)
+                        if not success:
+                            print(f"{patch} 처리 실패, 다음 패치로 이동")
+                    else:
+                        print(f"패치 파일을 찾을 수 없음: {patch}")
+                except Exception as e:
+                    print(f"{patch} 처리 중 오류 발생: {e}")
+        except Exception as e:
+            print(f"패치 리스트 처리 중 오류 발생: {e}")
 
-        for patch in patch_files:
-            try:
-                patch_path = find_file_in_folder(patch_folder, patch)
-                if patch_path:
-                    print(f"{patch_path}")
-                    success = run_as_admin(patch_path)
-                    if not success:
-                        print(f"{patch} 처리 실패, 다음 패치로 이동")
-                else:
-                    print(f"패치 파일을 찾을 수 없음: {patch}")
-            except Exception as e:
-                print(f"{patch} 처리 중 오류 발생: {e}")
-    except Exception as e:
-        print(f"sw_patch_list 처리 중 오류 발생: {e}")
+    def process_sw_patch_list(self):
+        print("SW 패치 리스트 처리 중")
+        self.process_patch_list(self.sw_patch_file, "비트", "AMD64", admin=True)
 
-
-def process_ms_patch_list(excel_file):
-    try:
-        df = pd.read_excel(excel_file, engine="openpyxl")
-        filtered_data = df[df["제목"].str.contains("64비트", na=False)]
-        patch_files = filtered_data["패치파일"].dropna().tolist()
-
-        for patch in patch_files:
-            try:
-                patch_path = find_file_in_folder(patch_folder, patch)
-                if patch_path:
-                    print(f"{patch_path}")
-                    success = silent_install_patch(patch_path)
-                    if not success:
-                        print(f"{patch} 처리 실패. 다음 패치로 이동합니다.")
-                else:
-                    print(f"패치 파일을 찾을 수 없음: {patch}")
-            except Exception as e:
-                print(f"{patch} 처리 중 오류 발생: {e}")
-    except Exception as e:
-        print(f"ms_patch_list 처리 중 오류 발생: {e}")
+    def process_ms_patch_list(self):
+        print("MS 패치 리스트 처리 중")
+        self.process_patch_list(self.ms_patch_file, "제목", "64비트", admin=False)
 
 
 if __name__ == "__main__":
