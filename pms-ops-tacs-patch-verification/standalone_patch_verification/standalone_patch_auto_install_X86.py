@@ -93,11 +93,15 @@ class StandAlonePatchInstaller:
 
 
 if __name__ == "__main__":
-    print("sw_patch_list 처리 중")
-    process_sw_patch_list(sw_patch_list)
+    user_home = os.path.expanduser("~")
+    desktop = os.path.join(user_home, "Desktop")
 
-    print("sw_patch_list 처리 후 대기 중")
+    sw_patch_list = os.path.join(desktop, "sw_patch_list.xlsx")
+    ms_patch_list = os.path.join(desktop, "ms_patch_list.xlsx")
+
+    installer = StandAlonePatchInstaller(sw_patch_list, ms_patch_list)
+
+    installer.process_sw_patch_list()
+    print("SW 패치 처리 후 대기 중...")
     time.sleep(180)
-
-    print("ms_patch_list 처리 중")
-    process_ms_patch_list(ms_patch_list)
+    installer.process_ms_patch_list()
