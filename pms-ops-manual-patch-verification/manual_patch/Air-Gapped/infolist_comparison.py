@@ -33,13 +33,6 @@ def exit_with_error(message):
     exit(1)
 
 
-def find_patches_directory(base_dir):
-    for root, dirs, _ in os.walk(base_dir):
-        if "patches" in dirs:
-            return os.path.join(root, "patches")
-    return None
-
-
 def process_zip(zip_file, parent_path=""):
     for file_info in zip_file.infolist():
         current_path = (
@@ -48,8 +41,8 @@ def process_zip(zip_file, parent_path=""):
             else file_info.filename
         )
 
-        if "patches" in current_path:
-            relative_path = current_path.split("patches", 1)[1].lstrip("\\/")
+        if "patches.zip" in current_path:
+            relative_path = current_path.split("patches.zip", 1)[1].lstrip("\\/")
             all_file_names.append(relative_path)
             log(f"파일 발견: {relative_path}")
         else:
@@ -67,6 +60,18 @@ def process_zip(zip_file, parent_path=""):
 
 
 def process_directory(directory_path):
+    for root, _, files in os.walk(directory_path):
+        for file in files:
+            if file.endswith(".zip"):
+                zip_path = os.path.join(root, file)
+                log(f"Zip 파일 처리 중: {zip_path}")
+                with zipfile.ZipFile(zip_path, "r") as zip_file:
+                    process_zip(zip_file)
+
+
+all_file_names = []
+log("MS 디렉토리 파일 및 patches.zip 내부 목록 작성 중")
+process_directory(BASE_DIRECTORY)
 
 log("SW 디렉토리 파일 및 patches.zip 내부 목록 작성 중")
 process_directory(SW_DIRECTORY)
@@ -128,7 +133,7 @@ no_ayt_files = []
 log("동일한 이름의 .ayt 파일이 존재하지 않는 파일:")
 for file in all_file_names:
     if file.startswith("ms_files/") and file.split(".")[-1] in {"cab", "exe"}:
-        ayt_file_path = os.path.join(LOCAL_DIRECTORY, f"{file}.ayt")
+        ayt_file_path = os.path.join(BASE_DIRECTORY, f"{file}.ayt")
         if not os.path.isfile(ayt_file_path):
             print(file)
             no_ayt_files.append(file)
