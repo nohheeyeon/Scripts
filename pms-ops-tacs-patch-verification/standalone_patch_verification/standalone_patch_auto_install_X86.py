@@ -81,3 +81,25 @@ def process_sw_patch_list(excel_file):
                 print(f"{patch} 처리 중 오류 발생: {e}")
     except Exception as e:
         print(f"sw_patch_list 처리 중 오류 발생: {e}")
+
+
+def process_ms_patch_list(excel_file):
+    try:
+        df = pd.read_excel(excel_file, engine="openpyxl")
+        filtered_data = df[df["제목"].str.contains("32비트", na=False)]
+        patch_files = filtered_data["패치파일"].dropna().tolist()
+
+        for patch in patch_files:
+            try:
+                patch_path = find_file_in_folder(patch_folder, patch)
+                if patch_path:
+                    print(f"{patch_path}")
+                    success = silent_install_patch(patch_path)
+                    if not success:
+                        print(f"{patch} 처리 실패. 다음 패치로 이동합니다.")
+                else:
+                    print(f"패치 파일을 찾을 수 없음: {patch}")
+            except Exception as e:
+                print(f"{patch} 처리 중 오류 발생: {e}")
+    except Exception as e:
+        print(f"ms_patch_list 처리 중 오류 발생: {e}")
