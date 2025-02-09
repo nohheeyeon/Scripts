@@ -37,3 +37,23 @@ def silent_install_patch(patch_path):
     except Exception as e:
         print(f"패치 설치 중 오류 발생 : {e}")
         return False
+
+
+def run_as_admin(file_path):
+    try:
+        print(f"관리자 권한으로 파일 실행 시도: {file_path}")
+        result = subprocess.run(
+            ["powershell", "Start-Process", f"'{file_path}'", "-Verb", "runAs"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if result.returncode == 0:
+            print(f"실행 성공: {file_path}")
+            return True
+        else:
+            print(f"실행 실패: {file_path}")
+            return False
+    except Exception as e:
+        print(f"관리자 실행 중 오류 발생: {e}")
+        return False
