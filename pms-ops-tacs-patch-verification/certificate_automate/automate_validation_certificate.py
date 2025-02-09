@@ -8,7 +8,7 @@ from docx import Document
 from docx.shared import Pt
 
 
-def find_v1_folder(base_path):
+def find_v1_dir(base_path):
     for root, dirs, files in os.walk(base_path):
         if "pms_patch" in dirs:
             pms_patch_path = os.path.join(root, "pms_patch")
@@ -18,22 +18,22 @@ def find_v1_folder(base_path):
     raise Exception("pms_patch/v1 폴더를 찾을 수 없습니다.")
 
 
-def get_unique_subfolder(base_path):
-    subfolders = [
+def get_patch_dir(base_path):
+    subdirs = [
         f for f in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, f))
     ]
-    if len(subfolders) == 1:
-        return subfolders[0]
+    if len(subdirs) == 1:
+        return subdirs[0]
     else:
         raise Exception("data 폴더 하위에 폴더가 하나만 있어야 합니다.")
 
 
-def map_patch_titles(file_list, ms_excel_file):
+def map_ms_patch_titles(file_list, ms_excel_file):
     df = pd.read_excel(ms_excel_file)
-    patch_title_map = dict(zip(df["패치파일"], df["제목"]))
+    ms_patch_title_map = dict(zip(df["패치파일"], df["제목"]))
     mapped_files = []
     for file in file_list:
-        title = patch_title_map.get(file, None)
+        title = ms_patch_title_map.get(file, None)
         if title:
             mapped_files.append(f"{title}\n{file}")
         else:
@@ -51,18 +51,18 @@ def count_22h2_titles(ms_excel_file):
     return df["제목"].str.contains("22H2").sum()
 
 
-def list_files_in_v1(v1_folder_path, ms_excel_file):
-    if not os.path.exists(v1_folder_path) or not os.path.isdir(v1_folder_path):
+def list_files_in_v1(v1_dir_path, ms_excel_file):
+    if not os.path.exists(v1_dir_path) or not os.path.isdir(v1_dir_path):
         return "v1 폴더가 존재하지 않습니다."
 
     result = []
     section_count = 0
     sw_files_grouped = defaultdict(list)
 
-    for root, dirs, files in os.walk(v1_folder_path):
+    for root, dirs, files in os.walk(v1_dir_path):
         if "sw_files" in dirs:
             dirs.remove("sw_files")
-        relative_path = os.path.relpath(root, v1_folder_path).replace(os.sep, "/")
+        relative_path = os.path.relpath(root, v1_dir_path).replace(os.sep, "/")
         filtered_files = [
             file
             for file in files
@@ -71,7 +71,7 @@ def list_files_in_v1(v1_folder_path, ms_excel_file):
         if filtered_files:
             section_count += 1
             prefix = chr(96 + section_count) + "."
-            mapped_files = map_patch_titles(filtered_files, excel_file)
+            mapped_files = map_ms_patch_titles(filtered_files, excel_file)
             file_list = [f"{i + 1}) {file}" for i, file in enumerate(mapped_files)]
             section = (
                 f"{prefix} {relative_path} 하위 {len(filtered_files)}개 파일 확인\n"
@@ -79,7 +79,7 @@ def list_files_in_v1(v1_folder_path, ms_excel_file):
             )
             result.append(section)
 
-    sw_files_path = os.path.join(v1_folder_path, "sw_files")
+    sw_files_path = os.path.join(v1_dir_path, "sw_files")
     if os.path.exists(sw_files_path):
         for root, dirs, files in os.walk(sw_files_path):
             relative_path = os.path.relpath(root, sw_files_path).replace(os.sep, "/")
@@ -93,7 +93,7 @@ def list_files_in_v1(v1_folder_path, ms_excel_file):
         for base_dir, grouped_files in sw_files_grouped.items():
             section_count += 1
             prefix = chr(96 + section_count) + "."
-            mapped_files = map_patch_titles(grouped_files, ms_excel_file)
+            mapped_files = map_ms_patch_titles(grouped_files, ms_excel_file)
             file_list = [f"{i + 1}) {file}" for i, file in enumerate(mapped_files)]
             section = (
                 f"{prefix} sw_files/{base_dir} 하위 {len(grouped_files)}개 파일 확인\n"
@@ -188,7 +188,7 @@ def update_docx_with_content(source_file_path, content_to_add, new_file_path, mo
     document = Document(source_file_path)
     try:
         data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
-        folder_name = get_unique_subfolder(data_dir)
+        patch_dir_name = get_patch_dir(data_dir)
         current_year = datetime.now().year
         previous_year, previous_month = get_previous_year_and_month()
         ms_excel_file = os.path.join(data_dir, "ms_patch_list.xlsx")
@@ -207,9 +207,9 @@ def update_docx_with_content(source_file_path, content_to_add, new_file_path, mo
             for cell in row.cells:
                 if ".tar" in cell.text:
                     if not any(
-                        f"{folder_name}.tar" in word for word in cell.text.split()
+                        f"{patch_dir_name}.tar" in word for word in cell.text.split()
                     ):
-                        cell.text = cell.text.replace(".tar", f"{folder_name}.tar")
+                        cell.text = cell.text.replace(".tar", f"{patch_dir_name}.tar")
                 if "월 증분 패치" in cell.text and not cell.text.startswith(
                     f"{month}월"
                 ):
@@ -278,36 +278,32 @@ def update_docx_with_content(source_file_path, content_to_add, new_file_path, mo
         print(f"오류 발생: {e}")
 
 
-def get_numeric_folders(base_path):
-    unique_subfolder = get_unique_subfolder(base_path)
+def get_numeric_dirs(base_path):
+    patch_dir = get_patch_dir(base_path)
 
-    standalone_path = os.path.join(
-        base_path, unique_subfolder, "pms_patch", "standalone"
-    )
+    standalone_path = os.path.join(base_path, patch_dir, "pms_patch", "standalone")
 
     if not os.path.exists(standalone_path):
         raise FileNotFoundError(
             f"'standalone' 폴더를 찾을 수 없습니다: {standalone_path}"
         )
 
-    numeric_folders = [
+    numeric_dirs = [
         f
         for f in os.listdir(standalone_path)
         if os.path.isdir(os.path.join(standalone_path, f)) and f.isdigit()
     ]
 
-    numeric_folders.sort()
-    return numeric_folders
+    numeric_dirs.sort()
+    return numeric_dirs
 
 
-def update_office_patch_section(docx_path, base_path):
+def update_standalone_office_patch_section(docx_path, base_path):
 
     document = Document(docx_path)
-    numeric_folders = get_numeric_folders(base_path)
-    unique_subfolder = get_unique_subfolder(base_path)
-    standalone_path = os.path.join(
-        base_path, unique_subfolder, "pms_patch", "standalone"
-    )
+    numeric_dirs = get_numeric_dirs(base_path)
+    patch_dir = get_patch_dir(base_path)
+    standalone_path = os.path.join(base_path, patch_dir, "pms_patch", "standalone")
     ms_excel_file = os.path.join(base_path, "ms_patch_list.xlsx")
     df = pd.read_excel(ms_excel_file)
 
@@ -320,9 +316,9 @@ def update_office_patch_section(docx_path, base_path):
 
     office_patch_text_64bit = "\nB. 오피스 2016 64 Bit\n"
 
-    for idx, folder in enumerate(numeric_folders, 1):
-        folder_path = os.path.join(standalone_path, folder)
-        exe_files = [f for f in os.listdir(folder_path) if f.endswith(".exe")]
+    for idx, dir in enumerate(numeric_dirs, 1):
+        dir_path = os.path.join(standalone_path, dir)
+        exe_files = [f for f in os.listdir(dir_path) if f.endswith(".exe")]
 
         exe_files_32bit = []
         exe_files_64bit = []
@@ -337,11 +333,11 @@ def update_office_patch_section(docx_path, base_path):
                 elif "64비트" in str(row["제목"]):
                     exe_files_64bit.append(exe_file)
 
-        office_patch_text_32bit += f"{idx}) {folder}\n ① {folder} 폴더 선택\n ② 실행\n"
+        office_patch_text_32bit += f"{idx}) {dir}\n ① {dir} 폴더 선택\n ② 실행\n"
         for exe_file in exe_files_32bit:
             office_patch_text_32bit += f"    {exe_file}\n"
 
-        office_patch_text_64bit += f"{idx}) {folder}\n ① {folder} 폴더 선택\n ② 실행\n"
+        office_patch_text_64bit += f"{idx}) {dir}\n ① {dir} 폴더 선택\n ② 실행\n"
         for exe_file in exe_files_64bit:
             office_patch_text_64bit += f"   {exe_file}\n"
 
@@ -360,7 +356,7 @@ def update_office_patch_section(docx_path, base_path):
     document.save(docx_path)
 
 
-def update_software_patch_in_docx(docx_path, sw_excel_path, base_path):
+def update_standalone_software_patch_section(docx_path, sw_excel_path, base_path):
     document = Document(docx_path)
     df = pd.read_excel(sw_excel_path)
     patch_version_map = dict(zip(df["패치명"], df["버전"]))
@@ -370,18 +366,16 @@ def update_software_patch_in_docx(docx_path, sw_excel_path, base_path):
     bandizip_version = patch_version_map.get("BandiZip", "버전 정보 없음")
     chrome_version = patch_version_map.get("Chrome", "버전 정보 없음")
 
-    unique_subfolder = get_unique_subfolder(base_path)
-    standalone_path = os.path.join(
-        base_path, unique_subfolder, "pms_patch", "standalone"
-    )
+    patch_dir = get_patch_dir(base_path)
+    standalone_path = os.path.join(base_path, patch_dir, "pms_patch", "standalone")
 
     software_files = {}
     for software in software_list:
-        software_folder = os.path.join(standalone_path, software)
-        if os.path.exists(software_folder):
+        software_dir = os.path.join(standalone_path, software)
+        if os.path.exists(software_dir):
             x86_files = []
             x64_files = []
-            for root, dirs, files in os.walk(software_folder):
+            for root, dirs, files in os.walk(software_dir):
                 for file in files:
                     if "x64" in file.lower() or "64" in file:
                         x64_files.append(file)
@@ -464,8 +458,8 @@ def update_completion_date(docx_path):
 
 
 data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
-folder_name = get_unique_subfolder(data_dir)
-v1_folder_path = find_v1_folder(os.path.join(data_dir, folder_name))
+patch_dir_name = get_patch_dir(data_dir)
+v1_dir_path = find_v1_dir(os.path.join(data_dir, patch_dir_name))
 excel_file = os.path.join(data_dir, "ms_patch_list.xlsx")
 docx_file_path = os.path.join(data_dir, "증분 패치 검증 QA 결과서.docx")
 
@@ -476,9 +470,9 @@ new_docx_file_path = os.path.join(
     data_dir, f"{month}월 증분 패치 검증 QA 결과서_{date_str}.docx"
 )
 
-previous_output = list_files_in_v1(v1_folder_path, excel_file)
+previous_output = list_files_in_v1(v1_dir_path, excel_file)
 update_docx_with_content(docx_file_path, previous_output, new_docx_file_path, month)
-update_office_patch_section(new_docx_file_path, data_dir)
+update_standalone_office_patch_section(new_docx_file_path, data_dir)
 sw_excel_file = os.path.join(data_dir, "sw_patch_list.xlsx")
-update_software_patch_in_docx(new_docx_file_path, sw_excel_file, data_dir)
+update_standalone_software_patch_section(new_docx_file_path, sw_excel_file, data_dir)
 update_completion_date(new_docx_file_path)
