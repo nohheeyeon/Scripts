@@ -55,6 +55,46 @@ function extract_validation_data(sheet: ExcelScript.Worksheet): {
   };
 }
 
+function update_sw_sheet(sheet: ExcelScript.Worksheet, validationData: {
+  productNames: string[], 
+  releaseDates: string[], 
+  versions: string[], 
+  patchFiles: string[]
+}): void {
+
+  let productCellAddress = find_cell_with_regex(sheet, /^제품명$/);
+  let releaseDateCellAddress = find_cell_with_regex(sheet, /^발표일$/);
+  let versionCellAddress = find_cell_with_regex(sheet, /^버전$/);
+  let patchFileCellAddress = find_cell_with_regex(sheet, /^패치 파일$/);
+
+  if (!productCellAddress || !releaseDateCellAddress || !versionCellAddress || !patchFileCellAddress) {
+    return;
+  }
+
+  let swProductNames: string[] = get_column_data(sheet, productCellAddress.row + 1, productCellAddress.column+1);
+  let commonProducts: string[] = find_common_values(swProductNames, validationData.productNames);
+
+  let logMessages: string[] = [];
+
+  for (let product of commonProducts) {
+    let swProductIndex: number = swProductNames.indexOf(product);
+    let validationProductIndex: number = validationData.productNames.indexOf(product);
+
+    if (swProductIndex !== -1 && validationProductIndex !== -1) {
+      let swReleaseDateCell = sheet.getCell(releaseDateCellAddress.row + swProductIndex, releaseDateCellAddress.column);
+      let swVersionCell = sheet.getCell(versionCellAddress.row + swProductIndex, versionCellAddress.column);
+      let swPatchFileCell = sheet.getCell(patchFileCellAddress.row + swProductIndex, patchFileCellAddress.column);
+      swReleaseDateCell.setValue(validationData.releaseDates[validationProductIndex]);
+      swVersionCell.setValue(validationData.versions[validationProductIndex]);
+      swPatchFileCell.setValue(validationData.patchFiles[validationProductIndex]);
+
+      logMessages.push(`[제품명: ${product}, 발표일: ${validationData.releaseDates[validationProductIndex]}, 패치 파일: ${validationData.patchFiles[validationProductIndex]}, 버전: ${validationData.versions[validationProductIndex]}]`);
+    }
+  }
+
+  console.log("복사 완료된 제품:", logMessages);
+}
+
 function find_sheet_by_regex(sheets: ExcelScript.Worksheet[], regex: RegExp): ExcelScript.Worksheet | null {
   for (let sheet of sheets) {
     if (regex.test(sheet.getName())) {
