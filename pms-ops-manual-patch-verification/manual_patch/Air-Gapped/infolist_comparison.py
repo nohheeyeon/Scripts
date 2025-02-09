@@ -43,10 +43,10 @@ def process_zip(zip_file, parent_path=""):
 
         if "patches.zip" in current_path:
             relative_path = current_path.split("patches.zip", 1)[1].lstrip("\\/")
-            all_file_names.append(relative_path)
+            all_file_names.add(relative_path)
             log(f"파일 발견: {relative_path}")
         else:
-            all_file_names.append(current_path)
+            all_file_names.add(current_path)
             log(f"파일 발견: {current_path}")
 
         if file_info.filename.endswith(".zip") and "patches.zip" not in current_path:
@@ -69,18 +69,18 @@ def process_directory(directory_path):
                     process_zip(zip_file)
 
 
-all_file_names = []
+all_file_names = set()
 log("MS 디렉토리 파일 및 patches.zip 내부 목록 작성 중")
 process_directory(BASE_DIRECTORY)
 
 log("SW 디렉토리 파일 및 patches.zip 내부 목록 작성 중")
 process_directory(SW_DIRECTORY)
 
-log(f"로컬 파일 목록 저장 중: {local_output_txt_path}")
+log(f"중복 제거된 로컬 파일 목록 저장 중: {local_output_txt_path}")
 with open(local_output_txt_path, "w", encoding="utf-8") as output_file:
-    for file_name in all_file_names:
+    for file_name in sorted(all_file_names):
         output_file.write(file_name + "\n")
-log("로컬 파일 목록 작성 완료")
+log("중복 제거된 로컬 파일 목록 작성 완료")
 
 
 def fetch_remote_files(ssh_server, port, username, password, remote_dir):
@@ -92,10 +92,10 @@ def fetch_remote_files(ssh_server, port, username, password, remote_dir):
         stdin, stdout, stderr = ssh.exec_command(
             f"find {remote_dir} -type f -o -type d"
         )
-        remote_files = stdout.read().decode("utf-8").splitlines()
+        remote_files = set(stdout.read().decode("utf-8").splitlines())
 
         log("원격 서버의 파일/폴더 목록 추출 완료")
-        return [file.replace(f"{remote_dir}/", "") for file in remote_files]
+        return {file.replace(f"{remote_dir}/", "") for file in remote_files}
     except Exception as e:
         exit_with_error(f"원격 서버에서 파일/폴더 목록을 가져오는 데 실패: {str(e)}")
     finally:
@@ -111,11 +111,11 @@ REMOTE_DIRECTORY = ""
 remote_files = fetch_remote_files(
     SSH_SERVER, PORT, USERNAME, PASSWORD, REMOTE_DIRECTORY
 )
-log(f"원격 서버 파일 목록 저장 중: {remote_output_txt_path}")
+log(f"중복 제거된 원격 서버 파일 목록 저장 중: {remote_output_txt_path}")
 with open(remote_output_txt_path, "w", encoding="utf-8") as output_file:
-    for file in remote_files:
+    for file in sorted(remote_files):
         output_file.write(file + "\n")
-log("원격 서버 파일 목록 작성 완료")
+log("중복 제거된 원격 서버 파일 목록 작성 완료")
 
 remote_files_set = set(remote_files)
 local_only_files = [file for file in all_file_names if file not in remote_files_set]
