@@ -10,9 +10,9 @@ class PatchDirectoryHandler:
 
     def get_patch_dir(self):
         subdirs = [
-            f
-            for f in os.listdir(self.base_path)
-            if os.path.isdir(os.path.join(self.base_path, f))
+            subdir_name
+            for subdir_name in os.listdir(self.base_path)
+            if os.path.isdir(os.path.join(self.base_path, subdir_name))
         ]
         if len(subdirs) == 1:
             return subdirs[0]
