@@ -20,9 +20,9 @@ class PatchDirectoryHandler:
             raise Exception("data 폴더 하위에 폴더가 하나만 있어야 합니다.")
 
     def find_v1_dir(self):
-        for root, dirs, _ in os.walk(self.base_path):
-            if "pms_patch" in dirs:
-                pms_patch_path = os.path.join(root, "pms_patch")
+        for dir_path, sub_dir_names, _ in os.walk(self.base_path):
+            if "pms_patch" in sub_dir_names:
+                pms_patch_path = os.path.join(dir_path, "pms_patch")
                 v1_path = os.path.join(pms_patch_path, "v1")
                 if os.path.exists(v1_path):
                     return v1_path
