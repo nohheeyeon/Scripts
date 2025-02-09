@@ -7,6 +7,10 @@ Windows VM에서 SW 및 MS 독립 실행 패치를 자동으로 설치하는 Pyt
 - 설치된 패치 확인은 수동으로 수행
 - 가상 환경을 이용한 실행
 
+## 주의
+* 이 스크립트는 Python 3.10 이상 버전에서만 실행 가능합니다.
+  * Python 버전 확인 : `python --version`
+
 ## 구조
 ```
 standalone_patch_verification/
