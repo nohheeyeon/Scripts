@@ -21,3 +21,12 @@ else:
 BASE_DIRECTORY = f"C:/ftp_root/manual/ms/{year}/{month}"
 local_output_txt_path = os.path.join(BASE_DIRECTORY, "local_file_list.txt")
 remote_output_txt_path = os.path.join(BASE_DIRECTORY, "remote_file_list.txt")
+
+
+def log(message):
+    print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {message}")
+
+
+def exit_with_error(message):
+    print(message)
+    exit(1)
