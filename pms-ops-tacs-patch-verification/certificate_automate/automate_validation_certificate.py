@@ -362,30 +362,45 @@ def update_office_patch_section(docx_path, base_path):
 
 def update_software_patch_in_docx(docx_path, sw_excel_path):
     document = Document(docx_path)
-
     df = pd.read_excel(sw_excel_path)
     patch_version_map = dict(zip(df["패치명"], df["버전"]))
-
     software_list = ["Adobe Acrobat Reader", "BandiZip", "Chrome"]
 
+    adobe_version = patch_version_map.get("Adobe Acrobat Reader", "버전 정보 없음")
+    bandizip_version = patch_version_map.get("BandiZip", "버전 정보 없음")
+    chrome_version = patch_version_map.get("Chrome", "버전 정보 없음")
+
+    software_patch_text = (
+        f"Acrobat Reader DC ({adobe_version}), BandiZip ({bandizip_version}), Chrome ({chrome_version}) 32/64 Bit\n"
+        "설치 후 독립 설치용 일반 SW 패치 파일 검증\n\n"
+        "▣ 확인 사항\n"
+        f"A. Adobe Acrobat Reader ({adobe_version})\n"
+        "1) Adobe Acrobat Reader 32 Bit 설치\n"
+        " ① Adobe Acrobat Reader 폴더 선택\n"
+        " ② 실행\n\n"
+        f"B. BandiZip ({bandizip_version})\n"
+        "1) BandiZip 32 Bit 설치\n"
+        " ① BandiZip 폴더 선택\n"
+        " ② 실행\n"
+        "2) BandiZip 64 Bit 설치\n"
+        " ① BandiZip 폴더 선택\n"
+        " ② 실행\n\n"
+        f"C. Chrome ({chrome_version})\n"
+        "1) Chrome 32 Bit 설치\n"
+        " ① Chrome 폴더 선택\n"
+        " ② 실행\n"
+        "2) Chrome 64 Bit 설치\n"
+        " ① Chrome 폴더 선택\n"
+        " ② 실행"
+    )
     for table in document.tables:
         for row_index, row in enumerate(table.rows):
             for cell_index, cell in enumerate(row.cells):
                 if "독립 설치용 일반 SW 패치 검증" in cell.text:
                     if row_index + 1 < len(table.rows):
                         target_cell = table.rows[row_index + 1].cells[cell_index]
-                        updated_text = target_cell.text
-
-                        for software in software_list:
-                            version = patch_version_map.get(software, "버전 정보 없음")
-                            updated_text = re.sub(
-                                rf"({software})\s*\(\)",
-                                rf"\1 ({version})",
-                                updated_text,
-                            )
-
-                        target_cell.text = updated_text
-
+                        target_cell.text = software_patch_text
+                        break
     set_font_size(document, 10)
     document.save(docx_path)
 
