@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
+from typing import List, Optional
 
 import pandas as pd
 
@@ -46,7 +47,9 @@ class PatchType(Enum):
 
 
 class StandAlonePatchInstaller:
-    def __init__(self, sw_patch_list_file, ms_patch_list_file, target_architecture):
+    def __init__(
+        self, sw_patch_list_file: str, ms_patch_list_file: str, target_architecture: str
+    ) -> None:
         self.sw_patch_list_file = sw_patch_list_file
         self.ms_patch_list_file = ms_patch_list_file
         self.target_architecture = target_architecture
@@ -54,7 +57,7 @@ class StandAlonePatchInstaller:
             os.environ.get("USERPROFILE", ""), r"AppData\Local\Temp\package"
         )
 
-    def find_file_in_path(self, base_path, target_name):
+    def find_file_in_path(self, base_path: str, target_name: str) -> Optional[str]:
         for root, dirs, files in os.walk(base_path):
             for file in files:
                 if (
@@ -64,7 +67,7 @@ class StandAlonePatchInstaller:
                     return os.path.join(root, file)
         return None
 
-    def install_ms_patch(self, patch_path):
+    def install_ms_patch(self, patch_path: str) -> bool:
         cmd = [patch_path, "/quiet", "/norestart"]
 
         try:
@@ -86,7 +89,7 @@ class StandAlonePatchInstaller:
 
         return False
 
-    def install_sw_patch(self, file_path):
+    def install_sw_patch(self, file_path: str) -> bool:
         try:
             logging.info(f"관리자 권한으로 파일 실행 시도: {file_path}")
             result = subprocess.run(
@@ -105,7 +108,9 @@ class StandAlonePatchInstaller:
             logging.error(f"관리자 실행 중 오류 발생: {e}")
             return False
 
-    def parse_patch_list_from_excel(self, excel_file, column_name, keyword):
+    def parse_patch_list_from_excel(
+        self, excel_file: str, column_name: str, keyword: str
+    ) -> List[str]:
         try:
             df = pd.read_excel(excel_file, engine="openpyxl")
             filtered_data = df[df[column_name].str.contains(keyword, na=False)]
@@ -115,7 +120,9 @@ class StandAlonePatchInstaller:
             logging.error(f"엑셀 파일 파싱 중 오류 발생: {e}")
             return []
 
-    def install_patches(self, patch_file_names, patch_type):
+    def install_patches(
+        self, patch_file_names: List[str], patch_type: PatchType
+    ) -> None:
         for patch_file_name in patch_file_names:
             try:
                 patch_file_path = self.find_file_in_path(
@@ -134,7 +141,7 @@ class StandAlonePatchInstaller:
             except Exception as e:
                 logging.error(f"{patch_file_name} 처리 중 오류 발생: {e}")
 
-    def process_sw_patch_list(self):
+    def process_sw_patch_list(self) -> None:
         logging.info("SW 패치 리스트 처리 중")
         keyword = "X86" if self.target_architecture == "X86" else "AMD64"
         patch_file_names = self.parse_patch_list_from_excel(
@@ -142,7 +149,7 @@ class StandAlonePatchInstaller:
         )
         self.install_patches(patch_file_names, PatchType.SW)
 
-    def process_ms_patch_list(self):
+    def process_ms_patch_list(self) -> None:
         logging.info("MS 패치 리스트 처리 중")
         keyword = "32비트" if self.target_architecture == "X86" else "64비트"
         patch_file_names = self.parse_patch_list_from_excel(
