@@ -96,9 +96,17 @@ def list_files_in_v1(v1_folder_path, excel_file):
 def update_docx_with_content(source_file_path, content_to_add, new_file_path, month):
     document = Document(source_file_path)
     try:
+        data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+        folder_name = get_unique_subfolder(data_dir)
+
         table = document.tables[1]
         for row in table.rows:
             for cell in row.cells:
+                if ".tar" in cell.text:
+                    if not any(
+                        f"{folder_name}.tar" in word for word in cell.text.split()
+                    ):
+                        cell.text = cell.text.replace(".tar", f"{folder_name}.tar")
                 if "월 증분 패치" in cell.text and not cell.text.startswith(
                     f"{month}월"
                 ):
