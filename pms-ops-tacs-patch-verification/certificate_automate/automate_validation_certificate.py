@@ -580,3 +580,14 @@ class PatchReportGenerator:
         except Exception as e:
             print(f"리포트 생성 중 오류 발생: {e}")
             return None
+
+
+if __name__ == "__main__":
+    base_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+
+    excel_processor = ExcelDataProcessor()
+    file_manager = PatchFileManager(base_path)
+
+    document_updater = DocumentUpdater(base_path, excel_processor, file_manager)
+
+    document_updater.process_document()
