@@ -47,11 +47,20 @@ def process_zip(zip_file, parent_path=""):
             if parent_path
             else file_info.filename
         )
-        all_file_names.append(current_path)
-        log(f"파일 발견: {current_path}")
 
-        if file_info.filename.endswith(".zip"):
-            log(f"내부 Zip 파일 처리 중: {current_path}")
+        if "patches" in current_path:
+            relative_path = current_path.split("patches", 1)[1].lstrip("\\/")
+            all_file_names.append(relative_path)
+            log(f"파일 발견: {relative_path}")
+        else:
+            all_file_names.append(current_path)
+            log(f"파일 발견: {current_path}")
+
+        if file_info.filename.endswith(".zip") and "patches.zip" not in current_path:
+            log(f"Zip 파일 이름만 기록: {current_path}")
+            continue
+        elif file_info.filename.endswith(".zip"):
+            log(f"내부 patches.zip 파일 처리 중: {current_path}")
             with zip_file.open(file_info) as inner_file:
                 with zipfile.ZipFile(BytesIO(inner_file.read())) as nested_zip:
                     process_zip(nested_zip, parent_path=current_path)
