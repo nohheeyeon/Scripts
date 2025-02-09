@@ -22,6 +22,9 @@ BASE_DIRECTORY = f"C:/ftp_root/manual/ms/{year}/{month}"
 SW_DIRECTORY = f"C:/ftp_root/manual/sw/{year}/{month}"
 local_output_txt_path = os.path.join(BASE_DIRECTORY, "local_file_list.txt")
 remote_output_txt_path = os.path.join(BASE_DIRECTORY, "remote_file_list.txt")
+remote_modified_output_txt_path = os.path.join(
+    BASE_DIRECTORY, "remote_modified_file_list.txt"
+)
 log_file_path = os.path.join(BASE_DIRECTORY, "log.txt")
 
 with open(log_file_path, "w", encoding="utf-8") as log_file:
@@ -89,10 +92,24 @@ def fetch_remote_files(ssh_server, port, username, password, remote_dir):
         stdin, stdout, stderr = ssh.exec_command(
             f"find {remote_dir} -type f -o -type d"
         )
-        remote_files = set(stdout.read().decode("utf-8").splitlines())
+        all_files = set(
+            line.strip().replace(f"{remote_dir}/", "")
+            for line in stdout.read().decode("utf-8").splitlines()
+        )
 
-        log("원격 서버의 파일/폴더 목록 추출 완료")
-        return {file.replace(f"{remote_dir}/", "") for file in remote_files}
+        log("원격 서버의 v1 하위 경로부터 모든 파일 경로 목록 추출 완료")
+
+        month_filter = now.strftime("%Y-%m")
+        stdin, stdout, stderr = ssh.exec_command(
+            f"find {remote_dir} -type f -newermt {month_filter}-01 ! -newermt {month_filter}-31"
+        )
+        modified_files = set(
+            line.strip().replace(f"{remote_dir}/", "")
+            for line in stdout.read().decode("utf-8").splitlines()
+        )
+
+        log("원격 서버에서 이번 달에 수정된 파일 목록 추출 완료")
+        return all_files, modified_files
     except Exception as e:
         exit_with_error(f"원격 서버에서 파일/폴더 목록을 가져오는 데 실패: {str(e)}")
     finally:
@@ -112,45 +129,9 @@ log(f"중복 제거된 원격 서버 파일 목록 저장 중: {remote_output_tx
 with open(remote_output_txt_path, "w", encoding="utf-8") as output_file:
     for file in sorted(remote_files):
         output_file.write(file + "\n")
-log("중복 제거된 원격 서버 파일 목록 작성 완료")
+log("원격 서버의 v1 하위 경로부터 전체 파일 목록 작성 완료")
 
-remote_files_set = set(remote_files)
-local_only_files = [file for file in all_file_names if file not in remote_files_set]
-log("로컬 디렉토리에만 있는 파일:")
-for file in local_only_files:
-    log(file)
-
-local_files_set = set(all_file_names)
-remote_only_files = [file for file in remote_files if file not in local_files_set]
-log("원격 서버에만 있는 파일:")
-for file in remote_only_files:
-    log(file)
-
-no_ayt_files = []
-log("동일한 이름의 .ayt 파일이 존재하지 않는 파일:")
-
-for file in all_file_names:
-    if file.startswith("ms_files/") and file.endswith((".cab", ".exe")):
-        ayt_file = f"{file}.ayt"
-        if ayt_file not in all_file_names:
-            log(file)
-            no_ayt_files.append(file)
-
-if not no_ayt_files:
-    log("모든 파일에 대해 동일한 이름의 .ayt 파일이 존재합니다.")
-else:
-    log("동일한 이름의 .ayt 파일이 존재하지 않는 파일 목록 작성 완료")
-
-if not no_ayt_files:
-    log("스크립트 실행 성공")
-    exit_code = 0
-else:
-    if local_only_files:
-        log("로컬 디렉토리에만 있는 파일이 있어 스크립트 실행 실패")
-    if remote_only_files:
-        log("원격 서버에만 있는 파일이 있어 스크립트 실행 실패")
-    if no_ayt_files:
-        log("동일한 이름의 .ayt 파일이 존재하지 않는 파일이 있어 스크립트 실행 실패")
-    exit_code = 1
-
-exit(exit_code)
+with open(remote_modified_output_txt_path, "w", encoding="utf-8") as output_file:
+    for file in sorted(modified_files):
+        output_file.write(file + "\n")
+log("이번 달에 수정된 원격 서버 파일 목록 작성 완료")
