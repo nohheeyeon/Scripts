@@ -42,7 +42,7 @@ class StandAlonePatchInstaller:
         self.ms_patch_list_file = ms_patch_list_file
         self.target_architecture = target_architecture
         self.temp_package_dir = os.path.join(
-            os.path.expanduser("~"), r"AppData\Local\Temp\package"
+            os.environ.get("USERPROFILE", ""), r"AppData\Local\Temp\package"
         )
 
         if not os.path.exists(self.temp_package_dir):
@@ -160,7 +160,7 @@ if __name__ == "__main__":
         logging.error("잘못된 인자 : X86 또는 AMD64만 지원됩니다.")
         sys.exit(1)
 
-    user_home = os.path.expanduser("~")
+    user_home = os.environ.get("USERPROFILE", "")
     desktop = os.path.join(user_home, "Desktop")
 
     sw_patch_list_file = os.path.join(desktop, "sw_patch_list.xlsx")
