@@ -3,45 +3,35 @@ from collections import defaultdict
 from datetime import datetime
 
 import pandas as pd
-import win32com.client as win32
+from docx import Document
 
 
-def create_hwp_file_with_v1_content(folder_name, excel_file):
+def create_docx_file_with_v1_content(folder_name, excel_file):
     data_dir = os.path.dirname(os.path.abspath(__file__))
     downloads_path = os.path.join(data_dir, "data")
     now = datetime.now()
     month = now.strftime("%m")
     date_str = now.strftime("%y%m%d")
-    hwp_file_name = os.path.join(
-        downloads_path, f"{month}월 증분 패치 검증 QA 결과서_{date_str}.hwp"
+    docx_file_name = os.path.join(
+        downloads_path, f"{month}월 증분 패치 검증 QA 결과서_{date_str}.docx"
     )
 
     content = list_files_in_v1(folder_name, excel_file)
 
-    hwp = win32.Dispatch("HWPFrame.HwpObject")
-    hwp.HAction.Run("FileNew")
+    document = Document()
+    document.add_heading(f"{month}월 증분 패치 검증 QA 결과서", level=1)
 
     for line in content.split("\n"):
-        hwp.HAction.GetDefault("InsertText", hwp.HParameterSet.HInsertText.HSet)
-        hwp.HParameterSet.HInsertText.Text = line
-        hwp.HAction.Execute("InsertText", hwp.HParameterSet.HInsertText.HSet)
+        document.add_paragraph(line)
 
-        hwp.HAction.Run("BreakPara")
+    document.save(docx_file_name)
 
-    hwp.HAction.GetDefault("CharShape", hwp.HParameterSet.HCharShape.HSet)
-    hwp.HParameterSet.HCharShape.TextSize = 1000
-    hwp.HAction.Execute("CharShape", hwp.HParameterSet.HCharShape.HSet)
-
-    hwp.SaveAs(hwp_file_name)
-    hwp.Quit()
-
-    print(f"'{hwp_file_name}' 파일이 생성되고 내용이 추가되었습니다.")
-    return hwp_file_name
+    print(f"'{docx_file_name}' 파일이 생성되고 내용이 추가되었습니다.")
+    return docx_file_name
 
 
 def map_patch_titles(file_list, excel_file):
     df = pd.read_excel(excel_file)
-
     patch_title_map = dict(zip(df["패치파일"], df["제목"]))
 
     mapped_files = []
@@ -53,12 +43,6 @@ def map_patch_titles(file_list, excel_file):
             mapped_files.append(file)
 
     return mapped_files
-
-
-folder_name = "pms_patch/pms_patch"
-data_dir = os.path.dirname(os.path.abspath(__file__))
-downloads_path = os.path.join(data_dir, "data")
-excel_file = os.path.join(downloads_path, "ms_patch_list.xlsx")
 
 
 def list_files_in_v1(folder_name, excel_file):
@@ -75,8 +59,7 @@ def list_files_in_v1(folder_name, excel_file):
     sw_files_grouped = defaultdict(list)
 
     for root, dirs, files in os.walk(v1_folder_path):
-        relative_path = os.path.relpath(root, v1_folder_path)
-        relative_path = relative_path.replace(os.sep, "/")
+        relative_path = os.path.relpath(root, v1_folder_path).replace(os.sep, "/")
 
         if "sw_files" in relative_path:
             parts = relative_path.split("/")
@@ -89,30 +72,19 @@ def list_files_in_v1(folder_name, excel_file):
                     ).replace(os.sep, "/")
                     sw_files_grouped[base_dir].append(file_path)
         else:
-            if (
-                "meta/180314/pms_bigboss_sw/sw" in relative_path
-                or "meta/180314/pms_bigboss/ms" in relative_path
-            ):
-                filtered_files = [
-                    file for file in files if not file.endswith(".zip")
-                ] + dirs
-            else:
-                filtered_files = [
-                    file
-                    for file in files
-                    if (file.endswith(".cab") or file.endswith(".exe"))
-                    and not file.endswith(".zip")
-                ]
+            filtered_files = [
+                file
+                for file in files
+                if file.endswith((".cab", ".exe")) and not file.endswith(".zip")
+            ]
 
             if filtered_files:
                 section_count += 1
                 prefix = chr(96 + section_count) + "."
-                file_count = len(filtered_files)
-
                 mapped_files = map_patch_titles(filtered_files, excel_file)
                 file_list = [f"{i + 1}) {file}" for i, file in enumerate(mapped_files)]
                 section = (
-                    f"{prefix} {relative_path} 하위 {file_count}개 파일 확인\n"
+                    f"{prefix} {relative_path} 하위 {len(filtered_files)}개 파일 확인\n"
                     + "\n".join(file_list)
                 )
                 result.append(section)
@@ -120,12 +92,10 @@ def list_files_in_v1(folder_name, excel_file):
     for base_dir, grouped_files in sw_files_grouped.items():
         section_count += 1
         prefix = chr(96 + section_count) + "."
-        file_count = len(grouped_files)
-
         mapped_files = map_patch_titles(grouped_files, excel_file)
         file_list = [f"{i + 1}) {file}" for i, file in enumerate(mapped_files)]
         section = (
-            f"{prefix} sw_files/{base_dir} 하위 {file_count}개 파일 확인\n"
+            f"{prefix} sw_files/{base_dir} 하위 {len(grouped_files)}개 파일 확인\n"
             + "\n".join(file_list)
         )
         result.append(section)
@@ -133,4 +103,9 @@ def list_files_in_v1(folder_name, excel_file):
     return "\n\n".join(result)
 
 
-create_hwp_file_with_v1_content(folder_name, excel_file)
+folder_name = "pms_patch/pms_patch"
+data_dir = os.path.dirname(os.path.abspath(__file__))
+downloads_path = os.path.join(data_dir, "data")
+excel_file = os.path.join(downloads_path, "ms_patch_list.xlsx")
+
+create_docx_file_with_v1_content(folder_name, excel_file)
