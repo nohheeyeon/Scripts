@@ -360,6 +360,29 @@ def update_office_patch_section(docx_path, base_path):
     document.save(docx_path)
 
 
+def update_software_versions_in_docx(docx_path, sw_excel_path):
+    document = Document(docx_path)
+
+    df = pd.read_excel(sw_excel_path)
+    patch_version_map = dict(zip(df["패치명"], df["버전"]))
+
+    software_list = ["Adobe Acrobat Reader", "BandiZip", "Chrome"]
+
+    for table in document.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for software in software_list:
+                    if software in cell.text:
+                        version = patch_version_map.get(software, "버전 정보 없음")
+                        updated_text = re.sub(
+                            rf"{software}\s*\(\)", f"{software} ({version})", cell.text
+                        )
+                        cell.text = updated_text
+    set_font_size(document, 10)
+    document.save(docx_path)
+    print(f"{docx_path} 파일이 성공적으로 업데이트되었습니다.")
+
+
 data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 folder_name = get_unique_subfolder(data_dir)
 v1_folder_path = find_v1_folder(os.path.join(data_dir, folder_name))
@@ -376,3 +399,5 @@ new_docx_file_path = os.path.join(
 previous_output = list_files_in_v1(v1_folder_path, excel_file)
 update_docx_with_content(docx_file_path, previous_output, new_docx_file_path, month)
 update_office_patch_section(new_docx_file_path, data_dir)
+sw_excel_file = os.path.join(data_dir, "sw_patch_list.xlsx")
+update_software_versions_in_docx(new_docx_file_path, sw_excel_file)
