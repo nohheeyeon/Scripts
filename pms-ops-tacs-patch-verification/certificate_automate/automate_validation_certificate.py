@@ -41,6 +41,16 @@ def map_patch_titles(file_list, excel_file):
     return mapped_files
 
 
+def count_32bit_titles(excel_file):
+    df = pd.read_excel(excel_file)
+    return df["제목"].str.contains("32비트").sum()
+
+
+def count_64bit_titles(excel_file):
+    df = pd.read_excel(excel_file)
+    return df["제목"].str.contains("64비트").sum()
+
+
 def list_files_in_v1(v1_folder_path, excel_file):
     if not os.path.exists(v1_folder_path) or not os.path.isdir(v1_folder_path):
         return "v1 폴더가 존재하지 않습니다."
@@ -113,6 +123,9 @@ def update_docx_with_content(source_file_path, content_to_add, new_file_path, mo
         data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
         folder_name = get_unique_subfolder(data_dir)
         current_year = datetime.now().year
+        excel_file = os.path.join(data_dir, "ms_patch_list.xlsx")
+        count_32bit = count_32bit_titles(excel_file)
+        count_64bit = count_64bit_titles(excel_file)
 
         table = document.tables[1]
         for row in table.rows:
@@ -133,6 +146,12 @@ def update_docx_with_content(source_file_path, content_to_add, new_file_path, mo
             if row.cells[0].text.strip() in target_numbers:
                 for cell in row.cells:
                     if row.cells[0].text.strip() == "9":
+                        cell.text = re.sub(
+                            r"21H2\(.*?\)", f"21H2({count_32bit})", cell.text
+                        )
+                        cell.text = re.sub(
+                            r"22H2\(.*?\)", f"21H2({count_64bit})", cell.text
+                        )
                         cell.text = re.sub(r"(?<!\d)년", f"{current_year}년", cell.text)
                         cell.text = re.sub(r"(?<!\d)월", f"{month}월", cell.text)
                     if "확인 사항" in cell.text:
