@@ -312,11 +312,11 @@ def update_office_patch_section(docx_path, base_path):
     )
 
     for idx, folder in enumerate(numeric_folders, 1):
-        office_patch_text += f"{idx}) {folder}\n ① 폴더 선택\n ② 실행\n"
+        office_patch_text += f"{idx}) {folder}\n ① {folder} 폴더 선택\n ② 실행\n"
 
     office_patch_text += "\nB. 오피스 2016 64 Bit\n"
     for idx, folder in enumerate(numeric_folders, 1):
-        office_patch_text += f"{idx}) {folder}\n ① 폴더 선택\n ② 실행\n"
+        office_patch_text += f"{idx}) {folder}\n ① {folder} 폴더 선택\n ② 실행\n"
 
     for table in document.tables:
         for row_index, row in enumerate(table.rows):
