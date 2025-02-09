@@ -160,6 +160,18 @@ def get_edge_version(excel_file):
     return "버전 정보 없음"
 
 
+def get_previous_year_and_month():
+    now = datetime.now()
+    if now.month == 1:
+        previous_year = now.year - 1
+        previous_month = 12
+    else:
+        previous_year = now.year
+        previous_month = now.month - 1
+
+    return previous_year, previous_month
+
+
 def set_font_size(document, size):
     for paragraph in document.paragraphs:
         for run in paragraph.runs:
@@ -178,6 +190,7 @@ def update_docx_with_content(source_file_path, content_to_add, new_file_path, mo
         data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
         folder_name = get_unique_subfolder(data_dir)
         current_year = datetime.now().year
+        previous_year, previous_month = get_previous_year_and_month()
         ms_excel_file = os.path.join(data_dir, "ms_patch_list.xlsx")
         sw_excel_file = os.path.join(data_dir, "sw_patch_list.xlsx")
         count_21h2 = count_21h2_titles(ms_excel_file)
@@ -246,6 +259,16 @@ def update_docx_with_content(source_file_path, content_to_add, new_file_path, mo
                                 cell.text,
                             )
                             cell.text = updated_text
+
+            for row in table.rows:
+                if row.cells[0].text.strip() == "13":
+                    for cell in row.cells:
+                        cell.text = re.sub(
+                            r"(?<!\d)년", f"{previous_year}년", cell.text
+                        )
+                        cell.text = re.sub(
+                            r"(?<!\d)월", f"{previous_month}월", cell.text
+                        )
 
         set_font_size(document, 10)
         document.save(new_file_path)
