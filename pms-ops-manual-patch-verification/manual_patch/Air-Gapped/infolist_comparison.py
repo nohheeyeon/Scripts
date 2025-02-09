@@ -19,6 +19,7 @@ else:
     month -= 1
 
 BASE_DIRECTORY = f"C:/ftp_root/manual/ms/{year}/{month}"
+SW_DIRECTORY = f"C:/ftp_root/manual/sw/{year}/{month}"
 local_output_txt_path = os.path.join(BASE_DIRECTORY, "local_file_list.txt")
 remote_output_txt_path = os.path.join(BASE_DIRECTORY, "remote_file_list.txt")
 
@@ -56,23 +57,10 @@ def process_zip(zip_file, parent_path=""):
                     process_zip(nested_zip, parent_path=current_path)
 
 
-LOCAL_DIRECTORY = find_patches_directory(BASE_DIRECTORY)
-if LOCAL_DIRECTORY is None:
-    exit_with_error("patches 디렉토리를 찾을 수 없습니다.")
+def process_directory(directory_path):
 
-all_file_names = []
-log("로컬 파일 및 Zip 파일 내부 목록 작성 중")
-for root, _, files in os.walk(LOCAL_DIRECTORY):
-    for file in files:
-        if file.endswith(".zip"):
-            zip_path = os.path.join(root, file)
-            log(f"Zip 파일 처리 중: {zip_path}")
-            with zipfile.ZipFile(zip_path, "r") as zip_file:
-                process_zip(zip_file)
-        else:
-            file_path = os.path.join(root, file).replace("\\", "/")
-            all_file_names.append(file_path.replace(f"{LOCAL_DIRECTORY}/", ""))
-            log(f"파일 발견: {file_path}")
+log("SW 디렉토리 파일 및 patches.zip 내부 목록 작성 중")
+process_directory(SW_DIRECTORY)
 
 log(f"로컬 파일 목록 저장 중: {local_output_txt_path}")
 with open(local_output_txt_path, "w", encoding="utf-8") as output_file:
@@ -127,6 +115,7 @@ log("원격 서버에만 있는 파일:")
 for file in remote_only_files:
     print(file)
 
+no_ayt_files = []
 log("동일한 이름의 .ayt 파일이 존재하지 않는 파일:")
 for file in all_file_names:
     if file.startswith("ms_files/") and file.split(".")[-1] in {"cab", "exe"}:
