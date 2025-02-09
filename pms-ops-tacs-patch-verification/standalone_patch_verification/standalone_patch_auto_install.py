@@ -76,45 +76,50 @@ class StandAlonePatchInstaller:
             print(f"관리자 실행 중 오류 발생: {e}")
             return False
 
-    def process_patch_list(self, excel_file, column_name, keyword, patch_type):
+    def parse_patch_list_from_excel(self, excel_file, column_name, keyword):
         try:
             df = pd.read_excel(excel_file, engine="openpyxl")
             filtered_data = df[df[column_name].str.contains(keyword, na=False)]
             patch_file_names = filtered_data["패치파일"].dropna().tolist()
-
-            for patch_file_name in patch_file_names:
-                try:
-                    patch_file_path = self.find_file_in_path(
-                        self.temp_package_dir, patch_file_name
-                    )
-                    if patch_file_path:
-                        print(f"패치 파일 경로: {patch_file_path}")
-                        if patch_type == PatchType.SW:
-                            success = self.install_sw_patch(patch_file_path)
-                        elif patch_type == PatchType.MS:
-                            success = self.install_ms_patch(patch_file_path)
-                        if not success:
-                            print(f"{patch_file_name} 처리 실패, 다음 패치로 이동")
-                    else:
-                        print(f"패치 파일을 찾을 수 없음: {patch_file_name}")
-                except Exception as e:
-                    print(f"{patch_file_name} 처리 중 오류 발생: {e}")
+            return patch_file_names
         except Exception as e:
-            print(f"패치 리스트 처리 중 오류 발생: {e}")
+            print(f"엑셀 파일 파싱 중 오류 발생: {e}")
+            return []
+
+    def install_patches(self, patch_file_names, patch_type):
+        for patch_file_name in patch_file_names:
+            try:
+                patch_file_path = self.find_file_in_path(
+                    self.temp_package_dir, patch_file_name
+                )
+                if patch_file_path:
+                    print(f"패치 파일 경로: {patch_file_path}")
+                    if patch_type == PatchType.SW:
+                        success = self.install_sw_patch(patch_file_path)
+                    elif patch_type == PatchType.MS:
+                        success = self.install_ms_patch(patch_file_path)
+                    if not success:
+                        print(f"{patch_file_name} 처리 실패, 다음 패치로 이동")
+                else:
+                    print(f"패치 파일을 찾을 수 없음: {patch_file_name}")
+            except Exception as e:
+                print(f"{patch_file_name} 처리 중 오류 발생: {e}")
 
     def process_sw_patch_list(self):
         print("SW 패치 리스트 처리 중")
         keyword = "X86" if self.target_architecture == "X86" else "AMD64"
-        self.process_patch_list(
-            self.sw_patch_list_file, "비트", keyword, patch_type=PatchType.SW
+        patch_file_names = self.parse_patch_list_from_excel(
+            self.sw_patch_list_file, "비트", keyword
         )
+        self.install_patches(patch_file_names, PatchType.SW)
 
     def process_ms_patch_list(self):
         print("MS 패치 리스트 처리 중")
         keyword = "32비트" if self.target_architecture == "X86" else "64비트"
-        self.process_patch_list(
-            self.ms_patch_list_file, "제목", keyword, patch_type=PatchType.MS
+        patch_file_names = self.parse_patch_list_from_excel(
+            self.ms_patch_list_file, "제목", keyword
         )
+        self.install_patches(patch_file_names, PatchType.MS)
 
 
 if __name__ == "__main__":
