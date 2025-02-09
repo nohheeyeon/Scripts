@@ -157,7 +157,12 @@ if not no_ayt_files:
     log("스크립트 실행 성공")
     exit_code = 0
 else:
-    log("스크립트 실행 실패")
+    if local_only_files:
+        log("로컬 디렉토리에만 있는 파일이 있어 스크립트 실행 실패")
+    if remote_only_files:
+        log("원격 서버에만 있는 파일이 있어 스크립트 실행 실패")
+    if no_ayt_files:
+        log("동일한 이름의 .ayt 파일이 존재하지 않는 파일이 있어 스크립트 실행 실패")
     exit_code = 1
 
 exit(exit_code)
