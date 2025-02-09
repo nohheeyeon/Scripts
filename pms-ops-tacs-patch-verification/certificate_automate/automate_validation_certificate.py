@@ -301,22 +301,51 @@ def get_numeric_folders(base_path):
 
 
 def update_office_patch_section(docx_path, base_path):
+
     document = Document(docx_path)
     numeric_folders = get_numeric_folders(base_path)
+    unique_subfolder = get_unique_subfolder(base_path)
+    standalone_path = os.path.join(
+        base_path, unique_subfolder, "pms_patch", "standalone"
+    )
+    ms_excel_file = os.path.join(base_path, "ms_patch_list.xlsx")
+    df = pd.read_excel(ms_excel_file)
 
-    office_patch_text = (
+    office_patch_text_32bit = (
         "오피스 2013, 2016 32/64 Bit 설치 후 독립 설치용 오피스 패치 파일 검증\n"
         "* 패치 파일 실행 시, C:\\Users\\사용자명\\AppData\\Local\\Temp\\package 경로에 압축 해제 후 패치 설치 시도\n\n"
         "▣ 확인 사항\n"
         "A. 오피스 2016 32 Bit\n"
     )
 
-    for idx, folder in enumerate(numeric_folders, 1):
-        office_patch_text += f"{idx}) {folder}\n ① {folder} 폴더 선택\n ② 실행\n"
+    office_patch_text_64bit = "\nB. 오피스 2016 64 Bit\n"
 
-    office_patch_text += "\nB. 오피스 2016 64 Bit\n"
     for idx, folder in enumerate(numeric_folders, 1):
-        office_patch_text += f"{idx}) {folder}\n ① {folder} 폴더 선택\n ② 실행\n"
+        folder_path = os.path.join(standalone_path, folder)
+        exe_files = [f for f in os.listdir(folder_path) if f.endswith(".exe")]
+
+        exe_files_32bit = []
+        exe_files_64bit = []
+
+        for exe_file in exe_files:
+            file_name_no_ext = os.path.splitext(exe_file)[0]
+            matched_rows = df[df["패치파일"].str.contains(file_name_no_ext, na=False)]
+
+            for _, row in matched_rows.iterrows():
+                if "32비트" in str(row["제목"]):
+                    exe_files_32bit.append(exe_file)
+                elif "64비트" in str(row["제목"]):
+                    exe_files_64bit.append(exe_file)
+
+        office_patch_text_32bit += f"{idx}) {folder}\n ① {folder} 폴더 선택\n ② 실행\n"
+        for exe_file in exe_files_32bit:
+            office_patch_text_32bit += f"    {exe_file}\n"
+
+        office_patch_text_64bit += f"{idx}) {folder}\n ① {folder} 폴더 선택\n ② 실행\n"
+        for exe_file in exe_files_64bit:
+            office_patch_text_64bit += f"   {exe_file}\n"
+
+    full_office_patch_text = office_patch_text_32bit + office_patch_text_64bit
 
     for table in document.tables:
         for row_index, row in enumerate(table.rows):
@@ -324,8 +353,9 @@ def update_office_patch_section(docx_path, base_path):
                 if "독립 설치용 오피스 패치 검증" in cell.text:
                     if row_index + 1 < len(table.rows):
                         target_cell = table.rows[row_index + 1].cells[cell_index]
-                        target_cell.text = office_patch_text
+                        target_cell.text = full_office_patch_text
                         break
+
     set_font_size(document, 10)
     document.save(docx_path)
 
