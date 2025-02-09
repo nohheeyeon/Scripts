@@ -1,4 +1,5 @@
 import os
+import re
 from collections import defaultdict
 from datetime import datetime
 
@@ -111,6 +112,7 @@ def update_docx_with_content(source_file_path, content_to_add, new_file_path, mo
     try:
         data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
         folder_name = get_unique_subfolder(data_dir)
+        current_year = datetime.now().year
 
         table = document.tables[1]
         for row in table.rows:
@@ -126,10 +128,13 @@ def update_docx_with_content(source_file_path, content_to_add, new_file_path, mo
                     cell.text = cell.text.replace(
                         "월 증분 패치", f"{month}월 증분 패치"
                     )
-        target_numbers = {"4", "6", "7", "8"}
+        target_numbers = {"4", "6", "7", "8", "9"}
         for row in table.rows:
             if row.cells[0].text.strip() in target_numbers:
                 for cell in row.cells:
+                    if row.cells[0].text.strip() == "9":
+                        cell.text = re.sub(r"(?<!\d)년", f"{current_year}년", cell.text)
+                        cell.text = re.sub(r"(?<!\d)월", f"{month}월", cell.text)
                     if "확인 사항" in cell.text:
                         if content_to_add not in cell.text:
                             cell.text = (
