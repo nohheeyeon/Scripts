@@ -22,14 +22,23 @@ BASE_DIRECTORY = f"C:/ftp_root/manual/ms/{year}/{month}"
 SW_DIRECTORY = f"C:/ftp_root/manual/sw/{year}/{month}"
 local_output_txt_path = os.path.join(BASE_DIRECTORY, "local_file_list.txt")
 remote_output_txt_path = os.path.join(BASE_DIRECTORY, "remote_file_list.txt")
+log_file_path = os.path.join(BASE_DIRECTORY, "log.txt")
+
+with open(log_file_path, "w", encoding="utf-8") as log_file:
+    log_file.write("로그 파일 시작\n")
 
 
 def log(message):
-    print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {message}")
+    timestamped_message = (
+        f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {message}"
+    )
+    print(timestamped_message)
+    with open(log_file_path, "a", encoding="utf-8") as log_file:
+        log_file.write(timestamped_message + "\n")
 
 
 def exit_with_error(message):
-    print(message)
+    log(message)
     exit(1)
 
 
@@ -121,13 +130,13 @@ remote_files_set = set(remote_files)
 local_only_files = [file for file in all_file_names if file not in remote_files_set]
 log("로컬 디렉토리에만 있는 파일:")
 for file in local_only_files:
-    print(file)
+    log(file)
 
 local_files_set = set(all_file_names)
 remote_only_files = [file for file in remote_files if file not in local_files_set]
 log("원격 서버에만 있는 파일:")
 for file in remote_only_files:
-    print(file)
+    log(file)
 
 no_ayt_files = []
 log("동일한 이름의 .ayt 파일이 존재하지 않는 파일:")
@@ -136,7 +145,7 @@ for file in all_file_names:
     if file.startswith("ms_files/") and file.endswith((".cab", ".exe")):
         ayt_file = f"{file}.ayt"
         if ayt_file not in all_file_names:
-            print(file)
+            log(file)
             no_ayt_files.append(file)
 
 if not no_ayt_files:
