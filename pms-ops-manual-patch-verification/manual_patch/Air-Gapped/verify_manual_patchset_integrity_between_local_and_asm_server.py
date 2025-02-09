@@ -34,14 +34,14 @@ class ManualPatchsetIntegrityVerifier:
         else:
             self.month -= 1
 
-        desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+        script_path = os.path.dirname(os.path.abspath(__file__))
         self.current_date_folder = os.path.join(
-            desktop_path, datetime.datetime.now().strftime("%Y-%m-%d")
+            script_path, datetime.datetime.now().strftime("%Y-%m-%d")
         )
         os.makedirs(self.current_date_folder, exist_ok=True)
 
-        self.BASE_DIRECTORY = f"C:/ftp_root/manual/ms/{self.year}/{self.month}"
-        self.SW_DIRECTORY = f"C:/ftp_root/manual/sw/{self.year}/{self.month}"
+        self.BASE_DIRECTORY = f"C:/ftp_root/manual_patch/{self.year}/{self.month}/ms"
+        self.SW_DIRECTORY = f"C:/ftp_root/manual_patch/{self.year}/{self.month}/sw"
 
         self.local_output_txt_path = os.path.join(
             self.current_date_folder, "local_file_list.txt"
@@ -55,7 +55,7 @@ class ManualPatchsetIntegrityVerifier:
         self.log_file_path = os.path.join(self.current_date_folder, "log.txt")
 
         self.patterns_json_path = os.path.join(
-            desktop_path, "check_office_patch_inclusion.json"
+            script_path, "check_office_patch_inclusion.json"
         )
 
         with open(self.log_file_path, "w", encoding="utf-8") as log_file:
