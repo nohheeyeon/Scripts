@@ -5,22 +5,32 @@ import sys
 import time
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
 
 import pandas as pd
 
 # 실행 순서
+
 # 1. 패치셋의 standalone 폴더를 각 VM의 "C:\Users\사용자이름\AppData\Local\Temp\package" 경로로 가져오기 (/package 폴더는 새롭게 생성해야 합니다.)
-# 2. standalone_patch_auto_install.py의 sw_patch_list_file와 ms_patch_list_file를 이 달에 해당하는 패치 목록의 이름으로 변경하기
+# 2. standalone_patch_verification/data 폴더에 sw_patch_list.xlsx와 ms_patch_list.xlsx 파일 배치
 # 3. standalone_patch_auto_install_X86.bat 또는 standalone_patch_auto_install_AMD64.bat를 관리자 권한으로 실행
 # 4. 스크립트 실행 종료 후 업데이트 확인
 #   - SW 패치 : "제어판\프로그램\프로그램 및 기능\프로그램 제거 또는 변경"에서 업데이트가 설치되었는지 확인
 #   - MS 패치 : "제어판\프로그램\프로그램 및 기능\설치된 업데이트"에서 KB ID가 설치되었는지 확인
 #                   또한 "C:\Users\사용자이름\AppData\Local\Temp\package" 위치에 해당 ID 값의 폴더가 생성되었는지 확인
-
-
 module_name = os.path.splitext(os.path.basename(__file__))[0]
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-log_dir = os.path.join(os.path.dirname(__file__), "logs")
+
+script_dir = Path(__file__).resolve().parent
+data_dir = os.path.join(script_dir, "data")
+if not os.path.exists(data_dir):
+    logging.error(
+        "'data' 폴더가 존재하지 않습니다. 데이터를 배치할 'data' 폴더를 생성하고 파일을 준비해주세요."
+    )
+    sys.exit(1)
+
+log_dir = os.path.join(script_dir, "logs")
+os.makedirs(log_dir, exist_ok=True)
 log_file = os.path.join(log_dir, f"{module_name}_{timestamp}.log")
 
 logging.basicConfig(
@@ -151,11 +161,14 @@ if __name__ == "__main__":
         logging.error("잘못된 인자 : X86 또는 AMD64만 지원됩니다.")
         sys.exit(1)
 
-    user_home = os.environ.get("USERPROFILE", "")
-    desktop = os.path.join(user_home, "Desktop")
+    sw_patch_list_file = os.path.join(data_dir, "sw_patch_list.xlsx")
+    ms_patch_list_file = os.path.join(data_dir, "ms_patch_list.xlsx")
 
-    sw_patch_list_file = os.path.join(desktop, "sw_patch_list.xlsx")
-    ms_patch_list_file = os.path.join(desktop, "ms_patch_list.xlsx")
+    if not os.path.exists(sw_patch_list_file) or not os.path.exists(ms_patch_list_file):
+        logging.error(
+            "data 디렉토리에 sw_patch_list.xlsx 또는 ms_patch_list.xlsx 파일이 없습니다."
+        )
+        sys.exit(1)
 
     installer = StandAlonePatchInstaller(
         sw_patch_list_file, ms_patch_list_file, target_architecture
