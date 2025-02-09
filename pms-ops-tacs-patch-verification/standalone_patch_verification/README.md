@@ -1,4 +1,4 @@
-# tacs_patch/standalone_patch_verification
+# standalone_patch_verification
 
 Windows VM에서 SW 및 MS 독립 실행 패치를 자동으로 설치하는 Python 스크립트입니다.
 
@@ -49,11 +49,13 @@ pip install -r requirements.txt
 ### 3. 실행 방법
 
 #### 3.1 X86 아키텍처에서 실행
+**관리자 모드로 실행**
 ```sh
 standalone_patch_auto_install_X86.bat
 ```
 
 #### 3.2 AMD64 아키텍처에서 실행
+**관리자 모드로 실행**
 ```sh
 standalone_patch_auto_install_AMD64.bat
 ```
@@ -78,6 +80,7 @@ standalone_patch_auto_install_AMD64.bat
 ```
 openpyxl
 pandas
+python
 ```
 
 ## 로깅
